@@ -1,4 +1,4 @@
-classdef VehicleMgr
+classdef VehicleMgr <handle
     %Vehcile Manager class
     %
     
@@ -25,9 +25,23 @@ classdef VehicleMgr
         
         % Function to add vehicles
         function obj = AddVehicles(obj, newVehicles)
-            addIndex = length(obj.allVehicles);
             for i=1:length(newVehicles)
-                obj.allVehicles(addIndex + i) = newVehicles(i);
+                numCars = length(obj.allVehicles)+1; %1 is base index of arrays
+                if numCars > 1
+                    for j = numCars-1:-1:1
+                        if obj.allVehicles(j).posY >= newVehicles(i).posY
+                            obj.allVehicles(j+1) = obj.allVehicles(j);
+                        else
+                            break;
+                        end
+                    end
+                else 
+                    j=1;
+                end
+                %this will be either the end of the array or the insertion
+                %point
+                obj.allVehicles(j) = newVehicles(i);
+                
             end
             
            % After adding the vehicles, rebuild the array that represents
@@ -80,5 +94,48 @@ classdef VehicleMgr
         end
     end
     
+    
+    %what follows is john's attempt to completely ruin brian's code.
+    %really, it's just a merging of the old and real vehicle manager
+    %until we find the real place for this code to live
+   methods(Static)
+        function isOk = IsLeftClear(car)
+            vm = VehicleMgr.getInstance;
+            isOk = false;
+        end
+        function isOk = IsRightClear(car)
+            vm = VehicleMgr.getInstance;
+            isOk = false;
+        end 
+        function [ distance ] = DistanceAhead( obj )
+            %DISTANCEBETWEEN Summary of this function goes here
+            %   Detailed explanation goes here
+             vm = VehicleMgr.getInstance;
+
+            %find nearest car in front of me, in my lane
+            %posX = myposX, posY > my Posy
+            numCars = length(vm.allVehicles);
+            for i = 1:numCars-1
+                if vm.allVehicles(i) == obj %find my car
+                    if ~isempty(vm.allVehicles(i+1)) 
+                        distance =  (vm.allVehicles(i+1).posY - vm.allVehicles(i).posY );
+                    else
+                        %no one in front of me
+                        distance = 9999;
+                    end
+                end
+            end
+           
+        end
+    end
+    methods (Static)
+        function managerObj = getInstance
+            persistent localObj
+            if isempty(localObj) || ~isvalid(localObj)
+                localObj = VehicleMgr(3);
+            end
+            managerObj = localObj;
+        end
+    end      
 end
 
