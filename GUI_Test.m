@@ -16,6 +16,7 @@ global car2;
 dest = 50;
 
 car1 = Vehicle;
+car1.id = 1;
 car1.preferredSpeed = 45;
 ds = car1.preferredSpeed;
 car1.targetVelocity = ds;
@@ -27,6 +28,7 @@ pos1     = 1;
 car1.posY = pos1; %miles
 
 car2 = Vehicle;
+car2.id = 2 ;
 car2.preferredSpeed = 55;
 ds = car2.preferredSpeed;
 car2.targetVelocity = ds;
@@ -44,7 +46,8 @@ t       = 0; %seconds
 tinc    = 1; %seconds
 
 
-vm = VehicleMgr(3);
+%vm = VehicleMgr(3);
+vm = VehicleMgr.getInstance;
 vm = AddVehicles(vm, [car1, car2]);
 
 guiHandle = GUI;
