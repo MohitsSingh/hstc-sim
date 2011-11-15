@@ -7,15 +7,15 @@ classdef Driver
     
     methods
         function action = Agent(obj, car)
-            actSpeed = car.velocity;
-            desiredSpeed = car.targetVelocity;
-            distanceToCarInFront = DistanceBetween(car); %miles 
+            actSpeed                = car.velocity;
+            desiredSpeed            = car.targetVelocity;
+            distanceToCarInFront    = VehicleMgr.DistanceAhead(car); %miles 
 
-            if distanceToCarInFront < 3 * actSpeed *5280 /3600 % 3 second rule
-                if VehicleManager.IsLeftClear(car)
+            if distanceToCarInFront < 3 * actSpeed / 3600 % 3 second rule (x mph for 3 seconds)
+                if VehicleMgr.IsLeftClear(car)
                     car.MoveLeft();
                 else
-                    if VehicleManager.IsRightClear(car)
+                    if VehicleMgr.IsRightClear(car)
                         car.MoveRight();
                     else
                         car.SlowDown(1.0);  %0 to 100% of deceleration rate
@@ -27,8 +27,9 @@ classdef Driver
                     %everything is copacetic
                     action = 0;
                 else
-                    %increase speed
-                    action = 1;
+                    %increase speed is the default behavior of the vehicle
+%                     action = 1;
+%                     car.SpeedUp(1.0);  %0 to 100% of deceleration rate
                 end
             end
             
