@@ -4,7 +4,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
     
     properties
         id              = 0;
-        posX            = 0.0; %miles?
+        lane            = 0.0; %miles?
         posY            = 0.0; %miles
         velocity        = 0.0; %mph
         acceleration    = 3.0; %ft/s/s 2-20ft/s/s
@@ -56,7 +56,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
         end
         
         function  obj = SlowDown(obj,howHard)
-            maxDelta = howHard * obj.deceleration *3600 / 5280 *deltaTinSeconds; %convert from ft/s/s to m/h/s
+            maxDelta = howHard * obj.deceleration *3600 / 5280; %convert from ft/s/s to m/h/s
+            %maxDelta = howHard * obj.deceleration *3600 / 5280 *deltaTinSeconds; %convert from ft/s/s to m/h/s
             obj.velocity = min(max( obj.targetVelocity,obj.velocity-maxDelta),obj.velocity+maxDelta) ;
         end
         
