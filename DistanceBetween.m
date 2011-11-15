@@ -4,6 +4,7 @@ function [ distance ] = DistanceBetween( obj )
 global car1;
 global car2;
 
+    distance = 0;
     if obj == car1 
         distance = 9999;
     else
