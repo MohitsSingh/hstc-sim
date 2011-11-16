@@ -62,8 +62,8 @@ guidata(hObject, handles);
 % so window can get raised using GUI.
 if strcmp(get(hObject,'Visible'),'off')
 %     plot(rand(5));
-    c=imread('road.bmp');
-    imagesc(imrotate(c, 90));
+%     c=imread('road.bmp');
+%     imagesc(imrotate(c, 90));
     
 end
 
@@ -88,20 +88,6 @@ function UpdateButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 
-% popup_sel_index = get(handles.popupmenu1, 'Value');
-% switch popup_sel_index
-%     case 1
-%         plot(rand(5));
-%     case 2
-%         plot(sin(1:0.01:25.99));
-%     case 3
-%         bar(1:.5:10);
-%     case 4
-%         plot(membrane);
-%     case 5
-%         surf(peaks);
-% end
-
 
 % --------------------------------------------------------------------
 function CloseMenuItem_Callback(hObject, eventdata, handles)
@@ -119,17 +105,36 @@ delete(handles.figure1)
 
 function updateGUI()
     guiHandle = GUI;
-    vm = getappdata(guiHandle, 'vm')
+    guihandles(guiHandle);
+    
+    vm = getappdata(guiHandle, 'vm');
+    vehicles = vm.allVehicles;
+    
+    cla;    
+    plot(rand(5) -1);
+    xlim([0 50]);
+    ylim([-1 (vm.lanes+2)]);
+    set(gca, 'YDir', 'reverse');
+%     set(gca,'GridLineStyle','-')
+%     set(gca, 'YMinorGrid', 'on');
+    set(gca, 'YGrid', 'on');
     
     hold on;
-%     axes(handles.axes1);
-    axis([-1, vm.lanes + 2, 0, 100]); 
-    cla;
     
-    vm.lanes
-
-    c=imread('road.bmp');
-    imagesc(imrotate(c, 90));
+    for i=1:length(vehicles)
+        v = vehicles(i);
+        r = rectangle('Position',[v.posY v.lane 1 1]);
+        
+        if v.wantsCaravan == 1
+            set(r, 'FaceColor','b');
+        else
+            set(r,'FaceColor','y');
+        end
+        
+    end
+    
+%     c=imread('road.bmp');
+%     imagesc(imrotate(c, 90));
 
 
 % --- Executes on button press in scrollLeft.

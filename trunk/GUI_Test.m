@@ -7,7 +7,7 @@
 % Travel to desired distance
 % stop simulation when pos >= destination
 % Collect and plot time, speed, and distance information
-clear;
+clear all;
 clear vehicle;
 clc;
 disp('Scenario 3');
@@ -56,7 +56,7 @@ GUI('updateGUI')
 
 while( done == false )
     
-     done = true;
+%      done = true;
 
 %     vm = TimeStep(vm,tinc);
     if pos1 < dest
@@ -80,6 +80,9 @@ while( done == false )
 
         t=t+tinc;
     end
+    
+    setappdata(guiHandle,'vm',vm);
+GUI('updateGUI')
 end
 
 GUI
