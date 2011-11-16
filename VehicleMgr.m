@@ -111,6 +111,8 @@ classdef VehicleMgr <handle
             %DISTANCEBETWEEN Summary of this function goes here
             %   Detailed explanation goes here
              vm = VehicleMgr.getInstance;
+             
+             distance = -1; % Steven's crude hack to make this work for now (distance isn't otherwise set if no vehicles present)
 
             %find nearest car in front of me, in my lane
             %posX = myposX, posY > my Posy
