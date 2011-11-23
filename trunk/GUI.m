@@ -58,6 +58,22 @@ handles.output = hObject;
 % Update handles structure
 guidata(hObject, handles);
 
+guiAxes = handles.axes1;
+
+axis normal;
+xlim([0 50]);
+
+set(guiAxes, 'YDir', 'reverse');
+%     set(gca,'GridLineStyle','-')
+%     set(gca, 'YMinorGrid', 'on');
+set(guiAxes, 'YGrid', 'on');
+set(guiAxes, 'XTick', 0:10:50);
+set(guiAxes, 'XTickLabelMode', 'auto');
+set(guiAxes, 'CameraPositionMode', 'auto');
+set(guiAxes, 'CameraTargetMode', 'auto');
+
+set(handles.UpdateButton, 'String', 'Quit (for now)');
+
 % This sets up the initial plot - only do when we are invisible
 % so window can get raised using GUI.
 if strcmp(get(hObject,'Visible'),'off')
@@ -87,6 +103,9 @@ function UpdateButton_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
+    disp('Update clicked... Closing for now');
+    close(handles.figure1);
+
 
 
 % --------------------------------------------------------------------
@@ -105,19 +124,21 @@ delete(handles.figure1)
 
 function updateGUI()
     guiHandle = GUI;
-    guihandles(guiHandle);
-    
+    gh = guihandles(guiHandle);
+    guiAxes = gh.axes1;
+%     get(guiAxes)
+
     vm = getappdata(guiHandle, 'vm');
     vehicles = vm.allVehicles;
+      
+    hold off
+    cla
     
-    cla;    
-    plot(rand(5) -1);
     xlim([0 50]);
     ylim([-1 (vm.lanes+2)]);
-    set(gca, 'YDir', 'reverse');
-%     set(gca,'GridLineStyle','-')
-%     set(gca, 'YMinorGrid', 'on');
-    set(gca, 'YGrid', 'on');
+    
+    set(guiAxes, 'YTick', -1:(vm.lanes+2));
+    set(guiAxes, 'YTickLabel', -1:(vm.lanes+2));
     
     hold on;
     
