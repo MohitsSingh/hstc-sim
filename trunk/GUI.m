@@ -60,27 +60,27 @@ guidata(hObject, handles);
 
 guiAxes = handles.axes1;
 
-axis normal;
-xlim([0 50]);
-
-set(guiAxes, 'YDir', 'reverse');
-%     set(gca,'GridLineStyle','-')
-%     set(gca, 'YMinorGrid', 'on');
-set(guiAxes, 'YGrid', 'on');
-set(guiAxes, 'XTick', 0:10:50);
-set(guiAxes, 'XTickLabelMode', 'auto');
-set(guiAxes, 'CameraPositionMode', 'auto');
-set(guiAxes, 'CameraTargetMode', 'auto');
-
-set(handles.UpdateButton, 'String', 'Quit (for now)');
-
 % This sets up the initial plot - only do when we are invisible
 % so window can get raised using GUI.
 if strcmp(get(hObject,'Visible'),'off')
 %     plot(rand(5));
 %     c=imread('road.bmp');
 %     imagesc(imrotate(c, 90));
-    
+    axis normal;
+    xlim([0 50]);
+
+    set(guiAxes, 'YDir', 'reverse');
+    %     set(gca,'GridLineStyle','-')
+    %     set(gca, 'YMinorGrid', 'on');
+    set(guiAxes, 'YGrid', 'on');
+%     set(guiAxes, 'XTick', 0:10:50);
+    set(guiAxes, 'XTickMode', 'auto');
+    set(guiAxes, 'XTickLabelMode', 'auto');
+    set(guiAxes, 'YTickLabelMode', 'auto');
+    set(guiAxes, 'CameraPositionMode', 'auto');
+    set(guiAxes, 'CameraTargetMode', 'auto');
+
+    set(handles.UpdateButton, 'String', 'Quit (for now)');
 end
 
 % UIWAIT makes GUI wait for user response (see UIRESUME)
@@ -107,26 +107,12 @@ function UpdateButton_Callback(hObject, eventdata, handles)
     close(handles.figure1);
 
 
-
-% --------------------------------------------------------------------
-function CloseMenuItem_Callback(hObject, eventdata, handles)
-% hObject    handle to CloseMenuItem (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-selection = questdlg(['Close ' get(handles.figure1,'Name') '?'],...
-                     ['Close ' get(handles.figure1,'Name') '...'],...
-                     'Yes','No','Yes');
-if strcmp(selection,'No')
-    return;
-end
-
-delete(handles.figure1)
-
 function updateGUI()
     guiHandle = GUI;
     gh = guihandles(guiHandle);
-    guiAxes = gh.axes1;
+    guiAxes = gh.axes1;    
 %     get(guiAxes)
+xl = get(guiAxes, 'XLim');
 
     vm = getappdata(guiHandle, 'vm');
     vehicles = vm.allVehicles;
@@ -134,18 +120,18 @@ function updateGUI()
     hold off
     cla
     
-    xlim([0 50]);
     ylim([-1 (vm.lanes+2)]);
     
     set(guiAxes, 'YTick', -1:(vm.lanes+2));
-    set(guiAxes, 'YTickLabel', -1:(vm.lanes+2));
-    
+%     set(guiAxes, 'YTickLabel', -1:(vm.lanes+2));
+%     get(guiAxes, 'YTickLabel');
+%  set(guiAxes, 'YTickLabel', [''; 'HSTC']);
     hold on;
-    
     for i=1:length(vehicles)
         v = vehicles(i);
         r = rectangle('Position',[v.posY v.lane 1 1]);
         
+        % todo: add more options
         if v.wantsCaravan == 1
             set(r, 'FaceColor','b');
         else
@@ -153,16 +139,14 @@ function updateGUI()
         end
         
     end
-    
-%     c=imread('road.bmp');
-%     imagesc(imrotate(c, 90));
-
 
 % --- Executes on button press in scrollLeft.
 function scrollLeft_Callback(hObject, eventdata, handles)
 % hObject    handle to scrollLeft (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+guiAxes = handles.axes1;
+set(guiAxes, 'XLim', get(guiAxes, 'XLim') - [10 10]);
 
 
 % --- Executes on button press in scrollRight.
@@ -170,6 +154,8 @@ function scrollRight_Callback(hObject, eventdata, handles)
 % hObject    handle to scrollRight (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+guiAxes = handles.axes1;
+set(guiAxes, 'XLim', get(guiAxes, 'XLim') + [10 10]);
 
 
 % --- Executes on mouse press over axes background.
