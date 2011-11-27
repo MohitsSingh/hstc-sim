@@ -17,6 +17,7 @@ dest = 50;
 
 car1 = Vehicle;
 car1.id = 1;
+car1.wantsCaravan = true;
 car1.preferredSpeed = 45;
 ds = car1.preferredSpeed;
 car1.targetVelocity = ds;
