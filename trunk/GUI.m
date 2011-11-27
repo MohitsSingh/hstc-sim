@@ -67,18 +67,21 @@ if strcmp(get(hObject,'Visible'),'off')
 %     c=imread('road.bmp');
 %     imagesc(imrotate(c, 90));
     axis normal;
-    xlim([0 50]);
+    xlim([0 25]);
 
     set(guiAxes, 'YDir', 'reverse');
     %     set(gca,'GridLineStyle','-')
     %     set(gca, 'YMinorGrid', 'on');
-    set(guiAxes, 'YGrid', 'on');
+%     set(guiAxes, 'YGrid', 'on');
 %     set(guiAxes, 'XTick', 0:10:50);
+%     set(guiAxes, 'YMinorGrid', 'on');
     set(guiAxes, 'XTickMode', 'auto');
     set(guiAxes, 'XTickLabelMode', 'auto');
     set(guiAxes, 'YTickLabelMode', 'auto');
     set(guiAxes, 'CameraPositionMode', 'auto');
     set(guiAxes, 'CameraTargetMode', 'auto');
+    xlabel('Miles');
+    ylabel('Lane');
 
     set(handles.UpdateButton, 'String', 'Quit (for now)');
 end
@@ -111,8 +114,6 @@ function updateGUI()
     guiHandle = GUI;
     gh = guihandles(guiHandle);
     guiAxes = gh.axes1;    
-%     get(guiAxes)
-xl = get(guiAxes, 'XLim');
 
     vm = getappdata(guiHandle, 'vm');
     vehicles = vm.allVehicles;
@@ -120,25 +121,57 @@ xl = get(guiAxes, 'XLim');
     hold off
     cla
     
-    ylim([-1 (vm.lanes+2)]);
-    
+    ylim([-1 (vm.lanes+1)]);
     set(guiAxes, 'YTick', -1:(vm.lanes+2));
-%     set(guiAxes, 'YTickLabel', -1:(vm.lanes+2));
-%     get(guiAxes, 'YTickLabel');
-%  set(guiAxes, 'YTickLabel', [''; 'HSTC']);
+    set(guiAxes, 'YTickLabel', {'', 'HSTC', 1:vm.lanes});
+    
     hold on;
+    
+    xl=xlim;
+    yl=ylim;
+    width=xl(2)-xl(1);
+    height=yl(2)-yl(1);
+    
+    % Plot grass
+    r = rectangle('Position',[xl(1)-5 -1 width+10 height]);
+    set(r, 'FaceColor', 'green');
+    
+    % Plot asphalt
+    r = rectangle('Position',[xl(1)-5 -.5 width+10 vm.lanes+1]);
+    set(r, 'FaceColor','black');
+    
+    % Plot lane markers
+    for i=-.5:vm.lanes+2
+        l=line(xlim,[i i]);
+        set(l, 'Color', 'white');
+        set(l, 'LineStyle', '--');
+    end
+    
+    % Compile stats
+    numInCaravan = sum([vehicles.caravanNumber] > 0);
+    numToJoin = sum([vehicles.wantsCaravan]);
+    numNotInCaravan = sum([vehicles.caravanNumber] <= 0);
+    avgVelocity = mean([vehicles.velocity]);
+    avgEconomy = mean([vehicles.fuelEconomy]);
+    
+    % Plot rectangles and compile statistics for vehicles
     for i=1:length(vehicles)
         v = vehicles(i);
-        r = rectangle('Position',[v.posY v.lane 1 1]);
+        r = rectangle('Position',[v.posY v.lane-.25 .5 .5]);
         
         % todo: add more options
-        if v.wantsCaravan == 1
-            set(r, 'FaceColor','b');
+        if v.wantsCaravan
+            set(r, 'FaceColor','blue');
+        elseif v.caravanNumber > 0 % In caravan
+            set(r, 'FaceColor','green');
         else
-            set(r,'FaceColor','y');
+            set(r,'FaceColor',[1 0.5 0.2]); % orange
         end
-        
     end
+    
+    set(gh.numberValues,'String',[numInCaravan; numToJoin; numNotInCaravan]);
+    set(gh.averageValues,'String',[avgVelocity; avgEconomy]);
+        
 
 % --- Executes on button press in scrollLeft.
 function scrollLeft_Callback(hObject, eventdata, handles)
@@ -146,7 +179,7 @@ function scrollLeft_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 guiAxes = handles.axes1;
-set(guiAxes, 'XLim', get(guiAxes, 'XLim') - [10 10]);
+set(guiAxes, 'XLim', get(guiAxes, 'XLim') - [5 5]);
 
 
 % --- Executes on button press in scrollRight.
@@ -155,7 +188,7 @@ function scrollRight_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 guiAxes = handles.axes1;
-set(guiAxes, 'XLim', get(guiAxes, 'XLim') + [10 10]);
+set(guiAxes, 'XLim', get(guiAxes, 'XLim') + [5 5]);
 
 
 % --- Executes on mouse press over axes background.
