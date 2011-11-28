@@ -91,16 +91,19 @@ classdef Vehicle < hgsetget % subclass hgsetget
             else
                 % Now that we have the closest in our lane, see how far we can
                 % advance.
-                disp('Have a car in front');
+%                 disp('Have a car in front');
                 inFrontPos = highway(closest, 3);
                 if (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     obj.posY = newPos;
                 else
                     % Can only advance so far this time.
                     newPos = inFrontPos - obj.minNonCaravanDistance;
+                    if  newPos < 0
+                        newPos = 0;
+                    end                    
                     % Complain if we backup
-                    assert (newPos > obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f]',...
-                            obj.posY, newPos);
+%                     assert (newPos > obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f]',...
+%                             obj.posY, newPos);
                     obj.posY = newPos;
                 end
             end
@@ -117,8 +120,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
         function obj = Enter(obj,deltaTinSeconds, highway, highwayIndex)
             % Get the closest car in lane 1 and see if we can enter.
             entryPoint = obj.posY;
-            newPos = getNewPos(object, deltaInSeconds);
-            closest = ClosestInLane (1, highway, highwayIndex);
+            newPos = GetNewPos(obj, deltaTinSeconds);
+            closest = ClosestInLane (obj,1, highway, highwayIndex);
             if (closest < 0)
                 obj.lane = 1;
             else
@@ -130,6 +133,9 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 else
                     % Can only advance so far this time.
                     newPos = inFrontPos - obj.minNonCaravanDistance;
+                    if  newPos < 0
+                        newPos = 0;
+                    end
                     % if we can't advance at all (newPos <= current), stay
                     % in 0.
                     if (newPos > obj.posY)
