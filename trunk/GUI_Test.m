@@ -13,7 +13,7 @@ clc;
 disp('Scenario 3');
 global car1;
 global car2;
-dest = 50;
+dest = 10;
 
 car1 = Vehicle;
 car1.id = 1;
@@ -44,7 +44,7 @@ done    = false;
 
 n       = 1; %array index
 t       = 0; %seconds
-tinc    = 1; %seconds
+tinc    = 2; %seconds
 
 
 %vm = VehicleMgr(3);
@@ -56,34 +56,41 @@ setappdata(guiHandle,'vm',vm);
 GUI('updateGUI')
 
 while( done == false )
-    
-%      done = true;
 
-%     vm = TimeStep(vm,tinc);
-    if pos1 < dest
-        [pos1,vel1,acc1] = car1.Advance(tinc); % step in 60 second increments
-    end
-    if pos2 < dest
-        [pos2,vel2,acc2] = car2.Advance(tinc); % step in 60 second increments
-    end
+%     if pos1 < dest
+% %         [pos1,vel1,acc1] = car1.Advance(tinc); % step in 60 second increments
+%         car1.Advance(tinc, vm.highway, car1.lane);
+%     end
+%     if pos2 < dest
+% %         [pos2,vel2,acc2] = car2.Advance(tinc); % step in 60 second increments
+%         car2.Advance(tinc, vm.highway, car2.lane);
+%     end
+    vm.TimeStep(tinc);
+
+    pos1=car1.posY;
+    vel1=car1.velocity;
+    acc1=car1.acceleration;
+    pos2=car2.posY;
+    vel2=car2.velocity;
+    acc2=car2.acceleration;
+    
     if pos1 >= dest && pos2 >= dest
         done = true;
-    else
-        
-        fprintf('t=%d, p=%f, v=%f, a=%f, p=%f, v=%f, a=%f\n',t,pos1, vel1, acc1,pos2, vel2, acc2);
-
-        %collect results for plots
-        x(n) = t;
-        p(n) = pos1;
-        s(n) = vel1;
-        a(n) = acc1;
-        n=n+1;
-
-        t=t+tinc;
     end
     
+    fprintf('t=%d, p=%f, v=%f, a=%f, p=%f, v=%f, a=%f\n',t,pos1, vel1, acc1,pos2, vel2, acc2);
+
+    %collect results for plots
+    x(n) = t;
+    p(n) = pos1;
+    s(n) = vel1;
+    a(n) = acc1;
+    n=n+1;
+
+    t=t+tinc;
+    
     setappdata(guiHandle,'vm',vm);
-GUI('updateGUI')
+    GUI('updateGUI')
 end
 
 GUI
