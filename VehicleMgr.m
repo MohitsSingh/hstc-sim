@@ -25,28 +25,11 @@ classdef VehicleMgr <handle
         
         % Function to add vehicles
         function obj = AddVehicles(obj, newVehicles)
-            for i=1:length(newVehicles)
-                numCars = length(obj.allVehicles)+1; %1 is base index of arrays
-                if numCars > 1
-                    for j = numCars-1:-1:1
-                        if obj.allVehicles(j).posY >= newVehicles(i).posY
-                            obj.allVehicles(j+1) = obj.allVehicles(j);
-                        else
-                            break;
-                        end
-                    end
-                else 
-                    j=1;
-                end
-                %this will be either the end of the array or the insertion
-                %point
-                obj.allVehicles(j) = newVehicles(i);
-                
-            end
-            
-           % After adding the vehicles, rebuild the array that represents
-           % the highway
-           obj = BuildHighway(obj);
+            % Append to the all vehicles array
+            obj.allVehicles = [obj.allVehicles newVehicles];
+            % After adding the vehicles, rebuild the array that represents
+            % the highway
+            obj = BuildHighway(obj);
         end
 
         
@@ -55,7 +38,7 @@ classdef VehicleMgr <handle
             % Starting at the end of the highway and moving towards the
             % beginning
             caravanLane = obj.lanes;
-            for i = length(obj.allVehicles) :-1: 1
+            for i = size(obj.highway, 1) :-1: 1
                 if (obj.highway(i, 2) == caravanLane)
                     index = obj.highway(i, 1);
                     v = obj.allVehicles(index);
@@ -65,7 +48,7 @@ classdef VehicleMgr <handle
             end
             
             % Now do the rest of the lanes.
-            for i = length(obj.allVehicles) :-1: 1
+            for i = size(obj.highway, 1) :-1: 1
                 if ((obj.highway(i, 2) ~= caravanLane) && (obj.highway(i, 2) ~= 0))
                     index = obj.highway(i, 1);
                     v = obj.allVehicles(index);
@@ -73,6 +56,18 @@ classdef VehicleMgr <handle
                     obj.allVehicles(index) = v;
                 end
             end
+            
+            % Now tell the ones in lane zero that they can enter.
+            % Current restriction is that only one on a ramp at a time.
+            for i = size(obj.highway, 1) :-1: 1
+                if (obj.highway(i, 2) == 0)
+                    index = obj.highway(i, 1);
+                    v = obj.allVehicles(index);
+                    v = Enter(v, timeDelta, obj.highway, i);
+                    obj.allVehicles(index) = v;
+                end
+            end
+            
             
             % Now rebuild the highway.
             obj = BuildHighway(obj);
@@ -84,7 +79,6 @@ classdef VehicleMgr <handle
             obj.highway = zeros(length(obj.allVehicles), 3);
             % Now re-build the highway.  It consists of the index, location
             % and lane for every vehicle
-%            temp = zeros(length(obj.allVehicles), 3);
             for v = 1:length(obj.allVehicles)
                 obj.highway(v, 1:3) = [v, obj.allVehicles(v).lane, obj.allVehicles(v).posY];
             end
