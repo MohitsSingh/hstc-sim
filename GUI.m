@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 14-Nov-2011 21:20:05
+% Last Modified by GUIDE v2.5 27-Nov-2011 21:11:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -67,8 +67,12 @@ if strcmp(get(hObject,'Visible'),'off')
 %     c=imread('road.bmp');
 %     imagesc(imrotate(c, 90));
     axis normal;
-    xlim([0 25]);
+    xlim([0 10]);
 
+    xlabel('Miles');
+    ylabel('Lane');
+
+    
     set(guiAxes, 'YDir', 'reverse');
     %     set(gca,'GridLineStyle','-')
     %     set(gca, 'YMinorGrid', 'on');
@@ -80,8 +84,6 @@ if strcmp(get(hObject,'Visible'),'off')
     set(guiAxes, 'YTickLabelMode', 'auto');
     set(guiAxes, 'CameraPositionMode', 'auto');
     set(guiAxes, 'CameraTargetMode', 'auto');
-    xlabel('Miles');
-    ylabel('Lane');
 
     set(handles.UpdateButton, 'String', 'Quit (for now)');
 end
@@ -114,27 +116,33 @@ function updateGUI()
     guiHandle = GUI;
     gh = guihandles(guiHandle);
     guiAxes = gh.axes1;    
+    
+    step = str2double(get(gh.edit1,'String'));
+    range = str2double(get(gh.edit2,'String'));
 
     vm = getappdata(guiHandle, 'vm');
     vehicles = vm.allVehicles;
       
-    hold off
-    cla
+    cla;
     
-    ylim([-1 (vm.lanes+1)]);
-    set(guiAxes, 'YTick', -1:(vm.lanes+2));
-    set(guiAxes, 'YTickLabel', {'', 'HSTC', 1:vm.lanes});
-    
-    hold on;
-    
+    xl=xlim;
+    xlim([xl(1) xl(1)+range]);
+    ylim([-1 (vm.lanes+1)]);   
     xl=xlim;
     yl=ylim;
     width=xl(2)-xl(1);
     height=yl(2)-yl(1);
     
+    set(guiAxes, 'YTick', -1:(vm.lanes+2));
+    set(guiAxes, 'YTickLabel', {'', 'HSTC', 1:vm.lanes});
+    set(guiAxes, 'XTick', xl(1):step:xl(2));
+    
+    hold on;
+    
     % Plot grass
     r = rectangle('Position',[xl(1)-5 -1 width+10 height]);
     set(r, 'FaceColor', 'green');
+    hold on
     
     % Plot asphalt
     r = rectangle('Position',[xl(1)-5 -.5 width+10 vm.lanes+1]);
@@ -179,7 +187,14 @@ function scrollLeft_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 guiAxes = handles.axes1;
-set(guiAxes, 'XLim', get(guiAxes, 'XLim') - [5 5]);
+step = str2double(get(handles.edit1,'String'));
+range = str2double(get(handles.edit2,'String'));
+
+if xlim-step >= 0
+    set(guiAxes, 'XLim', get(guiAxes, 'XLim') - step);
+    xl=xlim;
+    xlim([xl(1) xl(1)+range]);
+end
 
 
 % --- Executes on button press in scrollRight.
@@ -188,7 +203,13 @@ function scrollRight_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 guiAxes = handles.axes1;
-set(guiAxes, 'XLim', get(guiAxes, 'XLim') + [5 5]);
+step = str2double(get(handles.edit1,'String'));
+range = str2double(get(handles.edit2,'String'));
+% {step, step}
+% set(guiAxes, 'XLim', get(guiAxes, 'XLim') + step);
+xl=xlim;
+xlim([xl(1) xl(1)+range] + step);
+
 
 
 % --- Executes on mouse press over axes background.
@@ -198,3 +219,49 @@ function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 disp('I''ll do something eventually!')
+
+
+
+function edit1_Callback(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit1 as text
+%        str2double(get(hObject,'String')) returns contents of edit1 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit1_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit1 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+
+function edit2_Callback(hObject, eventdata, handles)
+% hObject    handle to edit2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: get(hObject,'String') returns contents of edit2 as text
+%        str2double(get(hObject,'String')) returns contents of edit2 as a double
+
+
+% --- Executes during object creation, after setting all properties.
+function edit2_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to edit2 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: edit controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
