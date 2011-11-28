@@ -11,7 +11,8 @@
 % stop simulation when pos >= destination
 % Collect and plot time, speed, and distance information
 clear;
-clear vehicle;
+clear Vehicle;
+clear VehicleMgr;
 clc;
 disp('Scenario 3');
 global car1;
@@ -28,6 +29,7 @@ acc = car1.acceleration;
 car1.targetRate = acc;
 pos1     = 20/5280;
 car1.posY = pos1; %miles
+car1.lane = 1;
 
 car2 = Vehicle;
 car2.id = 'car2';
@@ -39,52 +41,45 @@ acc = car2.acceleration;
 car2.targetRate = acc;
 pos2     = 0;
 car2.posY = pos2; %miles
+car2.lane = 1;
 
 done    = false;
 
-vm=VehicleManager.getInstance;
-vm.AddCar(car1);
-vm.AddCar(car2);
+vm=VehicleMgr.getInstance;
+% vm.AddCar(car1);
+% vm.AddCar(car2);
 
 car3 = car2;
 car3.id = 'car3';
 pos3 = (car1.posY + car2.posY)/2;
 car3.posY = pos3;
-vm.AddCar(car3);
-
+car1.lane = 3;
+% vm.AddCar(car3);
+vm = AddVehicles(vm, [car1, car2, car3]);
 n       = 1; %array index
 t       = 0; %seconds
 tinc    = 1; %seconds
 while( done == false )
-    
-    if pos1 < dest
-        [pos1,vel1,acc1] = car1.Advance(tinc); % step in 60 second increments
-    end
-    if pos2 < dest
-        [pos2,vel2,acc2] = car2.Advance(tinc); % step in 60 second increments
-    end
-    if pos3 < dest
-        [pos3,vel3,acc3] = car3.Advance(tinc); % step in 60 second increments
-    end    
-    if pos1 >= dest && pos2 >= dest && pos3 >= dest
+    vm.TimeStep(tinc);
+    if car1.posY>= dest || car2.posY >= dest || car3.posY >= dest
         done = true;
     else
    
-        %fprintf('t=%d, p=%f, v=%f, a=%f, p=%f, v=%f, a=%f\n',t,pos1, vel1, acc1,pos2, vel2, acc2);
+        fprintf('t=%d, p=%f, v=%f, a=%f, p=%f, v=%f, a=%f\n',t, car1.posY, car1.velocity, car1.acceleration, car2.posY, car2.velocity, car2.acceleration);
 
         %collect results for plots
         x(n) = t;
-        p1(n) = pos1;
-        s1(n) = vel1;
-        a1(n) = acc1;
+        p1(n) = car1.posY;
+        s1(n) = car1.velocity;
+        a1(n) = car1.acceleration;
 
-        p2(n) = pos2;
-        s2(n) = vel2;
-        a2(n) = acc2;
+        p2(n) = car2.posY;
+        s2(n) = car2.velocity;
+        a2(n) = car2.acceleration;
 
-        p3(n) = pos3;
-        s3(n) = vel3;
-        a3(n) = acc3;
+        p3(n) = car3.posY;
+        s3(n) = car3.velocity;
+        a3(n) = car3.acceleration;
 
         n=n+1;
 
