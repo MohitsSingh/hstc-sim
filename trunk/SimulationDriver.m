@@ -94,6 +94,12 @@ while ~simulationOver
     setappdata(guiHandle,'vm',vm);
     GUI('updateGUI')
     
+    %for Kpp1 and 2, follow caravan
+    %[x y z] = campos;
+    %campos([round(vm.allVehicles(1).posY) 0 0])
+    xlim([round(vm.allVehicles(1).posY)-10/2 round(vm.allVehicles(1).posY+10/2)]);
+    
+    
 end
 
 GUI;
