@@ -19,30 +19,40 @@ global CaravanControllerSetup
 global SimulationSetup
 % Initialize variables
 turnNumber = 1;
-    
 selection = 0;
 simulationOver = false;
 startSimulation = false;
-% DisplayOptions.ShowCommsRange = false;      %show radius for commmunications
-% DisplayOptions.ShowVisualRange = false;     %show radius for visibility
-% DisplayOptions.ShowCombatRange = false;     %show radius for combat range
-% DisplayOptions.ShowEnemyTroops = false;     %show lcoation of enemy troops
-% DisplayOptions.toolbar = 0;                 %initialize toolbar to null
+
+tinc    = 2; %seconds
+
+%load default simulation setups
+CaravanControllerSetup.VehicleSpacing = 3;
+CaravanControllerSetup.MaxCaravanSize = 33;
+CaravanControllerSetup.MaxCaravanSpeed = 133;
+CaravanControllerSetup.MinCaravanDistance = 10;
+CaravanControllerSetup.MaxCaravanDistance = 100;
+SimulationSetup.TrafficDensityModel = 'normal';
+SimulationSetup.SimulationRunLength = 180;
+SimulationSetup.SimulationRunUnits = 'Seconds';
 
 while ~startSimulation
     selection = menu('Main Menu',...
+                    'Run KPP1 Scenario',...
                     'Run Interactive Simulation',...
                     'Run Batched Simulations',...
                     'Edit Simulation Parameters',...
                     'Exit');
     switch selection
         case 1
+            Kpp1_Generate;
             startSimulation = true;
         case 2
             startSimulation = true;
-        case 3  %Setup
-            EditSimulationParameters;
+        case 3  
+            startSimulation = true;
         case 4
+            EditSimulationParameters;
+        case 5
             close all
             return
     end
@@ -61,9 +71,16 @@ simulationOver = false;
 
 %capture start time
 startTime = clock;  
+t = 0;
+
+guiHandle = GUI;
+setappdata(guiHandle,'vm',vm);
+GUI('updateGUI')
 
 while ~simulationOver
 
+    vm.TimeStep(tinc);
+    
     %check for end condition
     if SimulationSetup.SimulationRunUnits == 'Seconds'
         if etime(clock, startTime) > SimulationSetup.SimulationRunLength
@@ -72,7 +89,13 @@ while ~simulationOver
     else
     end
     turnNumber = turnNumber+ 1;
+    t = t + tinc;
+    
+    setappdata(guiHandle,'vm',vm);
+    GUI('updateGUI')
+    
 end
 
+GUI;
 disp('End of simulation');
     
