@@ -10,6 +10,7 @@ clear target;
 c = Caravan.getInstance;
 vm = VehicleMgr.getInstance;
 
+%createa a caravan of ten cars
 for i = 1:10
     allCars(i) = Vehicle;
     allCars(i).id = i;
@@ -39,9 +40,11 @@ c.destination = 50;
 
 
 %createa a target vehicle to get into caravan
-target = Vehicle;
-target.posY = 10+10;    %put it 10 miles ahead of caravan
-target.destination = 31.4159;
+target              = Vehicle;
+target.id           = 11;
+target.posY         = 10+10;    %put it 10 miles ahead of caravan
+target.destination  = 31.4159;
+target.velocity     = 60.0;
 target.wantsCaravan = true;
 
 vm.AddVehicles(target);
