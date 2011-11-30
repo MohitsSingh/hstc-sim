@@ -14,6 +14,7 @@
 close all   %close all previously opended figures
 clc
 clear
+clear all
 
 global CaravanControllerSetup
 global SimulationSetup
@@ -111,7 +112,10 @@ while ~simulationOver
     GUI('updateGUI')
     
     %for Kpp1 and 2, follow caravan
-    xlim([round(vm.allVehicles(1).posY)-10/2 round(vm.allVehicles(1).posY+10/2)]);
+    gh=guihandles(guiHandle);
+    step = str2double(get(gh.edit1,'String'));
+    range = str2double(get(gh.edit2,'String'));
+    xlim([step*fix(vm.allVehicles(1).posY/step)-range/2 step*fix(vm.allVehicles(1).posY/step)+range/2]);
     
     
 end
