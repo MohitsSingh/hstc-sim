@@ -1,5 +1,6 @@
 To Do
 1. The simulation driver needs some guts.  Those guts should be geared towards testing an initial scenario.  Do we have that scenario listed anywhere?
+2. Adding to the driver needing guts, we need to control time a bit. Right now everything runs in a while loop and executes as fast as it can.
 
 Bugs
 1. Test Vehicle class reports that car2 position remains at 0.0 athough speed increases.   It could be the GetDistanc... function that John created, that doesn;t jive with Brians highway.

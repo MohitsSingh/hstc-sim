@@ -72,8 +72,10 @@ if strcmp(get(hObject,'Visible'),'off')
     xlabel('Miles');
     ylabel('Lane');
 
+    % Modify default starting view values
+    set(handles.edit1,'String','.1');  %step
+	set(handles.edit2,'String','1');    %range
     
-    set(guiAxes, 'YDir', 'reverse');
     %     set(gca,'GridLineStyle','-')
     %     set(gca, 'YMinorGrid', 'on');
 %     set(guiAxes, 'YGrid', 'on');
@@ -134,7 +136,7 @@ function updateGUI()
     height=yl(2)-yl(1);
     
     set(guiAxes, 'YTick', -1:(vm.lanes+2));
-    set(guiAxes, 'YTickLabel', {'', 'HSTC', 1:vm.lanes});
+%     set(guiAxes, 'YTickLabel', {'', 'HSTC', vm.lanes:-1:1});
     set(guiAxes, 'XTick', xl(1):step:xl(2));
     
     hold on;
@@ -165,7 +167,8 @@ function updateGUI()
     % Plot rectangles and compile statistics for vehicles
     for i=1:length(vehicles)
         v = vehicles(i);
-        r = rectangle('Position',[v.posY v.lane-.25 .5 .5]);
+%         r = rectangle('Position',[v.posY v.lane-1.25 .5 .5],'Curvature',[1 1]);
+        r = rectangle('Position',[v.posY v.lane-.05 .0019 .1],'Curvature',[1 1]);
         
         % todo: add more options
         if v.wantsCaravan
