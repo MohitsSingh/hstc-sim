@@ -20,7 +20,7 @@ for i = 1:10
     if i == 1
         allCars(i).posY = 10.0; %starting location        
     else
-        allCars(i).posY = allCars(i-1).posY - c.minVehicleSpacing ;
+        allCars(i).posY = allCars(i-1).posY - allCars(i-1).length - c.minVehicleSpacing ;
     end
     
     %put all cars in caravan lane
