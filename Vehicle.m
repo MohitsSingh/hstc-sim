@@ -9,6 +9,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         velocity        = 0.0; %mph
         acceleration    = 3.0; %ft/s/s 2-20ft/s/s
         deceleration    = -1.5; %ft/s/s
+        length          = 13.0/5280.0; %13 feet in miles.   make all cars same length for now
         
 % http://physics.info/acceleration/        
 % Automotive Acceleration (g) 1g = 32ft/s/s
@@ -24,6 +25,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         
         dragCoefficient = 0.4;
         wantsCaravan    = false;
+        wantsOutOfCaravan    = false;
         caravanNumber   = 0;  %might be redundant...can lookup in caravan
         caravanPosition = 0;
         fuelEconomy     = 20.0; %mpg
@@ -53,6 +55,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
             maxDelta = obj.targetRate *3600 / 5280 *deltaTinSeconds; %convert from ft/s/s to m/h/s
             obj.velocity = min(max( obj.targetVelocity,obj.velocity-maxDelta),obj.velocity+maxDelta) ;
             pos = obj.posY + deltaTinSeconds / 3600 * obj.velocity; %convert seconds to hours for math
+%             fprintf('id=%d was %f, now %f at %f mph\n',obj.id, obj.posY,pos, obj.velocity);
         end
         
         function closest = ClosestInLane(obj, lane, highway, startIndex)
@@ -92,7 +95,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 % Now that we have the closest in our lane, see how far we can
                 % advance.
 %                 disp('Have a car in front');
-                inFrontPos = highway(closest, 3);
+                inFrontPos = highway(closest, 3) - 13.0/5280.0; %for now hardcode a car length TODO
                 if (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     obj.posY = newPos;
                 else
@@ -107,7 +110,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     obj.posY = newPos;
                 end
             end
-            obj.drv.Agent(obj);
+%             obj.drv.Agent(obj);
         end
         
         function  obj = SlowDown(obj,howHard)
