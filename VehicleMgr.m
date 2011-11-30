@@ -38,6 +38,7 @@ classdef VehicleMgr <handle
             % Starting at the end of the highway and moving towards the
             % beginning
             caravanLane = obj.lanes;
+%             disp('CARAVAN LANES');
             for i = size(obj.highway, 1) :-1: 1
                 if (obj.highway(i, 2) == caravanLane)
                     index = obj.highway(i, 1);
@@ -46,7 +47,7 @@ classdef VehicleMgr <handle
                     obj.allVehicles(index) = v;
                 end
             end
-            
+%             disp('Other LANES');
             % Now do the rest of the lanes.
             for i = size(obj.highway, 1) :-1: 1
                 if ((obj.highway(i, 2) ~= caravanLane) && (obj.highway(i, 2) ~= 0))
