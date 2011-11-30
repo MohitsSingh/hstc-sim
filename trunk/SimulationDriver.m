@@ -38,6 +38,10 @@ SimulationSetup.SimulationRunUnits = 'Seconds';
 while ~startSimulation
     selection = menu('Main Menu',...
                     'Run KPP1 Scenario',...
+                    'Run KPP2 Scenario',...
+                    'Run KPP3 Scenario',...
+                    'Run KPP4 Scenario',...
+                    'Run KPP5 Scenario',...
                     'Run Interactive Simulation',...
                     'Run Batched Simulations',...
                     'Edit Simulation Parameters',...
@@ -47,12 +51,24 @@ while ~startSimulation
             Kpp1_Generate;
             startSimulation = true;
         case 2
+            Kpp2_Generate;
             startSimulation = true;
-        case 3  
+        case 3
+            Kpp3_Generate;
             startSimulation = true;
         case 4
-            EditSimulationParameters;
+            Kpp4_Generate;
+            startSimulation = true;
         case 5
+            Kpp5_Generate;
+            startSimulation = true;
+        case 6
+            startSimulation = true;
+        case 7  
+            startSimulation = true;
+        case 8
+            EditSimulationParameters;
+        case 9
             close all
             return
     end
@@ -81,7 +97,7 @@ while ~simulationOver
 
     vm.TimeStep(tinc);
     
-    %check for end condition
+    %check for exit conditions
     if SimulationSetup.SimulationRunUnits == 'Seconds'
         if etime(clock, startTime) > SimulationSetup.SimulationRunLength
             simulationOver = True;
@@ -92,11 +108,9 @@ while ~simulationOver
     t = t + tinc;
     
     setappdata(guiHandle,'vm',vm);
-    GUI('updateGUI')
+   % GUI('updateGUI')
     
     %for Kpp1 and 2, follow caravan
-    %[x y z] = campos;
-    %campos([round(vm.allVehicles(1).posY) 0 0])
     xlim([round(vm.allVehicles(1).posY)-10/2 round(vm.allVehicles(1).posY+10/2)]);
     
     
