@@ -40,7 +40,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
         targetVelocity  = 0;    % how fast do we want to be going
         targetRate      = 0;    % how fast do we want to change our speed
         
-        drv             = Driver;
+        drv             = Driver; %simulator of human agent
+        accModule       = Acc;      %the computerized driver (no steering, though)
         
         %Minimum distance between cars NOT in caravan
         minNonCaravanDistance = 0.005681 % 30 feet in miles.
@@ -93,31 +94,40 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 % Now that we have the closest in our lane, see how far we can
                 % advance.
                 inFrontPos = highway(closest, 3) - 13.0/5280.0; %for now hardcode a car length TODO
-                if (inFrontPos > (newPos + obj.minNonCaravanDistance))
+                
+                %if we are in a caravan, we can only move as far as the
+                %tailend of the car in front of us minus the caravan
+                %spacing
+                if obj.caravanNumber ~= 0 
+                    obj.posY = min(newPos, inFrontPos - obj.minNonCaravanDistance)
+                elseif (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     % We can advance the entire way
                     obj.posY = newPos;
                 else
-                    % See if we can change lanes and still advance as far
-                    % as we want.
-                    newPosThisLane = inFrontPos - obj.minNonCaravanDistance;
-                    [posInNewLane, newLane] = ChangeLanes(obj, highway, highwayIndex, newPos);
-                    if (newPosThisLane < posInNewLane)
-                        % We are changing lanes.  This means that we can
-                        % advance the distance returned
-                        obj.lane = newLane;
-                        obj.posY = posInNewLane;
-                        VehicleMgr.LaneChange(highwayIndex);
-                    else
-                        % Can only advance so far this time in this lane.
-                        % let's figure out how far
-                        if  newPosThisLane < 0
-                            newPosThisLane = 0;
-                        end                    
-                        % Complain if we backup
-                        assert (newPosThisLane > obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f',...
-                                obj.posY, newPos, obj.minNonCaravanDistance);
-                        obj.posY = newPosThisLane;
-                        % Need to adjust current speed here?
+                    %only let cars in caravan automatically change lanes
+                    if obj.caravanNumber == 0 %dy default now, the # is 0 because of if/else structure
+                        % See if we can change lanes and still advance as far
+                        % as we want.
+                        newPosThisLane = inFrontPos - obj.minNonCaravanDistance;
+                        [posInNewLane, newLane] = ChangeLanes(obj, highway, highwayIndex, newPos);
+                        if (newPosThisLane < posInNewLane)
+                            % We are changing lanes.  This means that we can
+                            % advance the distance returned
+                            obj.lane = newLane;
+                            obj.posY = posInNewLane;
+                            VehicleMgr.LaneChange(highwayIndex);
+                        else
+                            % Can only advance so far this time in this lane.
+                            % let's figure out how far
+                            if  newPosThisLane < 0
+                                newPosThisLane = 0;
+                            end                    
+                            % Complain if we backup
+                            assert (newPosThisLane > obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f',...
+                                    obj.posY, newPos, obj.minNonCaravanDistance);
+                            obj.posY = newPosThisLane;
+                            % Need to adjust current speed here?
+                        end
                     end
                 end
             end
