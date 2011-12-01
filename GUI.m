@@ -168,7 +168,7 @@ function updateGUI()
     for i=1:length(vehicles)
         v = vehicles(i);
 %         r = rectangle('Position',[v.posY v.lane-1.25 .5 .5],'Curvature',[1 1]);
-        r = rectangle('Position',[v.posY v.lane-.05 .0019 .1],'Curvature',[1 1]);
+        r = rectangle('Position',[v.posY v.lane-.05 v.length .1],'Curvature',[0 0]);
         
         % todo: add more options
         if v.wantsCaravan
