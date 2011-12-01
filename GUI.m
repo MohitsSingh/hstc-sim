@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 27-Nov-2011 21:11:18
+% Last Modified by GUIDE v2.5 30-Nov-2011 22:59:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -268,3 +268,18 @@ function edit2_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
+
+
+% --- Executes on button press in pushbutton7.
+function pushbutton7_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton7 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+global SimulationSetup
+    
+    if SimulationSetup.Pause == true
+        SimulationSetup.Pause = false;
+    else
+        SimulationSetup.Pause = true;
+    end
+    
