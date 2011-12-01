@@ -25,6 +25,7 @@ for i = 1:10
     
     %put all cars in caravan lane
     allCars(i).lane = 4;
+    allCars(i).caravanNumber = 1; % non-zero caravan number
     
     c.AddToVehicleList(allCars(i).id);
     
