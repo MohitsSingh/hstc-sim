@@ -101,6 +101,7 @@ while ~simulationOver
     if SimulationSetup.Pause == true
         pause(1);
         GUI('updateGUI')
+        continue;
     end
         
     vm.TimeStep(tinc);
