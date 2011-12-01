@@ -100,11 +100,11 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     % See if we can change lanes and still advance as far
                     % as we want.
                     newPosThisLane = inFrontPos - obj.minNonCaravanDistance;
-                    posInNewLane = ChangeLanes(obj, highway, highwayIndex, newPos);
+                    [posInNewLane, newLane] = ChangeLanes(obj, highway, highwayIndex, newPos);
                     if (newPosThisLane < posInNewLane)
                         % We are changing lanes.  This means that we can
                         % advance the distance returned
-                        obj.lane = obj.lane + 1;
+                        obj.lane = newLane;
                         obj.posY = posInNewLane;
                         VehicleMgr.LaneChange(highwayIndex);
                     else
@@ -126,28 +126,60 @@ classdef Vehicle < hgsetget % subclass hgsetget
         
         % See if we can change lanes and how far we could advance in that
         % lane.
-        function posInLane = ChangeLanes(obj, highway, highwayIndex, newPos)
-            newLane = obj.lane + 1;
-            posInLane = 0.0;
-            % First make sure we are not in the caravan lane.
-            if ~VehicleMgr.IsCaravanLane (newLane)
-                % Look in lane + 1 and see how far we can advance there
-                newLane = obj.lane + 1;
-                closest = ClosestInLane (obj, newLane, highway, highwayIndex);  
+        function [posInLane, newLane] = ChangeLanes(obj, highway, highwayIndex, newPos)
+            leftLane = obj.lane + 1;
+            rightLane = obj.lane - 1;
+
+            posInLeftLane = 0.0;
+            posInRightLane = 0.0;
+            % Lets look at moving left first.
+            % First make sure we are not trying to move into the caravan lane.
+            if ~VehicleMgr.IsCaravanLane (leftLane)
+                % Look in left lane and see how far we can advance there
+                closest = ClosestInLane (obj, leftLane, highway, highwayIndex);  
                 if (closest > 0)
                     % There is a possibility we will move.  See how far we
                     % can advance in that lane.
                     inFrontPos = highway(closest, 3);
                     if (inFrontPos > (newPos + obj.minNonCaravanDistance))
                         % We can advance the entire way
-                        posInLane = newPos;
+                        posInLeftLane = newPos;
                     else
-                        posInLane = inFrontPos - obj.minNonCaravanDistance;
+                        posInLeftLane = inFrontPos - obj.minNonCaravanDistance;
                     end
                 else
                     % Nothing in front in that lane.
-                    posInLane = newPos;
+                    posInLeftLane = newPos;
                 end
+            end
+            
+            % Now try moving to the right.
+            % But only if there is a right lane.
+            if (rightLane > 0)
+                % Look in right lane and see how far we can advance there
+                closest = ClosestInLane (obj, rightLane, highway, highwayIndex);  
+                if (closest > 0)
+                    % There is a possibility we will move.  See how far we
+                    % can advance in that lane.
+                    inFrontPos = highway(closest, 3);
+                    if (inFrontPos > (newPos + obj.minNonCaravanDistance))
+                        % We can advance the entire way
+                        posInRightLane = newPos;
+                    else
+                        posInRightLane = inFrontPos - obj.minNonCaravanDistance;
+                    end
+                else
+                    % Nothing in front in that lane.
+                    posInRightLane = newPos;
+                end
+            end
+            
+            if (posInLeftLane >= posInRightLane)
+                posInLane = posInLeftLane;
+                newLane = leftLane;
+            else
+                posInLane = posInRightLane;
+                newLane = rightLane;
             end
         end
         
