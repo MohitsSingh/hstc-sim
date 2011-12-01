@@ -107,7 +107,7 @@ classdef VehicleMgr <handle
         %Function to move vehicles around on the highway AFTER they have
         %moved and done a lane change.  This method will find the correct
         %place for the vehicle to be.  Since we process from the furthest
-        %to the end, this won't disturn any other processing that has been
+        %to the end, this won't disturb any other processing that has been
         %done.
         function LaneChange (currentIndex)
             vm = VehicleMgr.getInstance;
