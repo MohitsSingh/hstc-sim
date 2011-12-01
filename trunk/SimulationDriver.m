@@ -27,14 +27,16 @@ startSimulation = false;
 tinc    = 2; %seconds
 
 %load default simulation setups
-CaravanControllerSetup.VehicleSpacing = 3;
-CaravanControllerSetup.MaxCaravanSize = 33;
-CaravanControllerSetup.MaxCaravanSpeed = 133;
-CaravanControllerSetup.MinCaravanDistance = 10;
-CaravanControllerSetup.MaxCaravanDistance = 100;
-SimulationSetup.TrafficDensityModel = 'normal';
-SimulationSetup.SimulationRunLength = 180;
-SimulationSetup.SimulationRunUnits = 'Seconds';
+CaravanControllerSetup.VehicleSpacing       = 3;
+CaravanControllerSetup.MaxCaravanSize       = 33;
+CaravanControllerSetup.MaxCaravanSpeed      = 133;
+CaravanControllerSetup.MinCaravanDistance   = 10;
+CaravanControllerSetup.MaxCaravanDistance   = 100;
+
+SimulationSetup.TrafficDensityModel     = 'normal';
+SimulationSetup.SimulationRunLength     = 180;
+SimulationSetup.SimulationRunUnits      = 'Seconds';
+SimulationSetup.Pause                   = false;
 
 while ~startSimulation
     selection = menu('Main Menu',...
@@ -96,6 +98,11 @@ GUI('updateGUI')
 
 while ~simulationOver
 
+    if SimulationSetup.Pause == true
+        pause(1);
+        GUI('updateGUI')
+    end
+        
     vm.TimeStep(tinc);
     
     %check for exit conditions

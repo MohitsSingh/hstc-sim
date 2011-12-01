@@ -114,8 +114,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
                             newPosThisLane = 0;
                         end                    
                         % Complain if we backup
-%                        assert (newPosThisLane > obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f',...
-%                                obj.posY, newPos, obj.minNonCaravanDistance);
+                        assert (newPosThisLane > obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f',...
+                                obj.posY, newPos, obj.minNonCaravanDistance);
                         obj.posY = newPosThisLane;
                         % Need to adjust current speed here?
                     end
