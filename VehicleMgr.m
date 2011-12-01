@@ -3,16 +3,13 @@ classdef VehicleMgr <handle
     %
     
     properties
-        struct
         lanes = 0;
         allVehicles = Vehicle.empty;    % All vehicles in the system.
         highway;                        % The structure of the highway is
-                                        % that column 1 is the index info
-                                        % allVehicles, column 2 is the
-                                        % distance from the beginning of
+                                        % column 1 is the index into allVehicles
+                                        % column 2 is the lane that vehicle is in
+                                        % column 3 is the distance from the beginning of
                                         % the highway of that vehicle.
-                                        % Column 3 is the lane that vehicle
-                                        % is in.
                                         % There may be zeros within the array
     end
     
@@ -102,6 +99,35 @@ classdef VehicleMgr <handle
             vm = VehicleMgr.getInstance;
             isOk = false;
         end 
+        function isLane = IsCaravanLane(lane)
+            vm = VehicleMgr.getInstance;
+            isLane = (vm.lanes == lane);
+        end
+        
+        %Function to move vehicles around on the highway AFTER they have
+        %moved and done a lane change.  This method will find the correct
+        %place for the vehicle to be.  Since we process from the furthest
+        %to the end, this won't disturn any other processing that has been
+        %done.
+        function LaneChange (currentIndex)
+            vm = VehicleMgr.getInstance;
+            vehicleToMove = vm.highway(currentIndex, 1);
+            idMoving = vm.allVehicles(vm.highway(currentIndex, 1)).id;
+            myDistance = vm.allVehicles(vehicleToMove).posY;
+            i = currentIndex + 1;
+            while (i <= size(vm.highway,1)) && (myDistance > vm.allVehicles(vm.highway(i, 1)).posY)
+                vm.highway(i - 1, 1) = vm.highway(i, 1);
+                vm.highway(i - 1, 2) = vm.highway(i, 2);
+                vm.highway(i - 1, 3) = vm.highway(i, 3);
+                i = i + 1;
+            end
+            if (i > size(vm.highway, 1))
+                vm.highway(i - 1, 1:3) = [vehicleToMove, vm.allVehicles(vehicleToMove).lane, vm.allVehicles(vehicleToMove).posY];
+            else
+                vm.highway(i, 1:3) = [vehicleToMove, vm.allVehicles(vehicleToMove).lane, vm.allVehicles(vehicleToMove).posY];
+            end
+        end
+        
         function [ distance ] = DistanceAhead( obj )
             %DISTANCEBETWEEN Summary of this function goes here
             %   Detailed explanation goes here
@@ -129,7 +155,7 @@ classdef VehicleMgr <handle
         function managerObj = getInstance
             persistent localObj
             if isempty(localObj) || ~isvalid(localObj)
-                localObj = VehicleMgr(3);
+                localObj = VehicleMgr(4);
             end
             managerObj = localObj;
         end

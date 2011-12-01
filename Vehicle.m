@@ -73,8 +73,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
         end
         
         function obj = Advance(obj, deltaTinSeconds, highway, highwayIndex)
-%            maxDelta = obj.targetRate *3600 / 5280 *deltaTinSeconds; %convert from ft/s/s to m/h/s
-%            obj.velocity = min(max( obj.targetVelocity,obj.velocity-maxDelta),obj.velocity+maxDelta) ;
             % Get our proposed new position.  If someone is between our
             % current position and that position, move to just behind the
             % closest one.
@@ -94,24 +92,65 @@ classdef Vehicle < hgsetget % subclass hgsetget
             else
                 % Now that we have the closest in our lane, see how far we can
                 % advance.
-%                 disp('Have a car in front');
                 inFrontPos = highway(closest, 3) - 13.0/5280.0; %for now hardcode a car length TODO
                 if (inFrontPos > (newPos + obj.minNonCaravanDistance))
+                    % We can advance the entire way
                     obj.posY = newPos;
                 else
-                    % Can only advance so far this time.
-                    newPos = inFrontPos - obj.minNonCaravanDistance;
-                    if  newPos < 0
-                        newPos = 0;
-                    end                    
-                    % Complain if we backup
-%                     assert (newPos > obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f]',...
-%                             obj.posY, newPos);
-                    obj.posY = newPos;
+                    % See if we can change lanes and still advance as far
+                    % as we want.
+                    newPosThisLane = inFrontPos - obj.minNonCaravanDistance;
+                    posInNewLane = ChangeLanes(obj, highway, highwayIndex, newPos);
+                    if (newPosThisLane < posInNewLane)
+                        % We are changing lanes.  This means that we can
+                        % advance the distance returned
+                        obj.lane = obj.lane + 1;
+                        obj.posY = posInNewLane;
+                        VehicleMgr.LaneChange(highwayIndex);
+                    else
+                        % Can only advance so far this time in this lane.
+                        % let's figure out how far
+                        if  newPosThisLane < 0
+                            newPosThisLane = 0;
+                        end                    
+                        % Complain if we backup
+%                        assert (newPosThisLane > obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f',...
+%                                obj.posY, newPos, obj.minNonCaravanDistance);
+                        obj.posY = newPosThisLane;
+                        % Need to adjust current speed here?
+                    end
                 end
             end
 %             obj.drv.Agent(obj);
         end
+        
+        % See if we can change lanes and how far we could advance in that
+        % lane.
+        function posInLane = ChangeLanes(obj, highway, highwayIndex, newPos)
+            newLane = obj.lane + 1;
+            posInLane = 0.0;
+            % First make sure we are not in the caravan lane.
+            if ~VehicleMgr.IsCaravanLane (newLane)
+                % Look in lane + 1 and see how far we can advance there
+                newLane = obj.lane + 1;
+                closest = ClosestInLane (obj, newLane, highway, highwayIndex);  
+                if (closest > 0)
+                    % There is a possibility we will move.  See how far we
+                    % can advance in that lane.
+                    inFrontPos = highway(closest, 3);
+                    if (inFrontPos > (newPos + obj.minNonCaravanDistance))
+                        % We can advance the entire way
+                        posInLane = newPos;
+                    else
+                        posInLane = inFrontPos - obj.minNonCaravanDistance;
+                    end
+                else
+                    % Nothing in front in that lane.
+                    posInLane = newPos;
+                end
+            end
+        end
+        
         
         function  obj = SlowDown(obj,howHard)
             maxDelta = howHard * obj.deceleration *3600 / 5280; %convert from ft/s/s to m/h/s
