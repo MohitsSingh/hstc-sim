@@ -73,8 +73,8 @@ if strcmp(get(hObject,'Visible'),'off')
     ylabel('Lane');
 
     % Modify default starting view values
-    set(handles.edit1,'String','.1');  %step
-	set(handles.edit2,'String','1');    %range
+    set(handles.edit1,'String','.05');  %step
+	set(handles.edit2,'String','.25');    %range
     
     %     set(gca,'GridLineStyle','-')
     %     set(gca, 'YMinorGrid', 'on');
@@ -109,13 +109,17 @@ function UpdateButton_Callback(hObject, eventdata, handles)
 % hObject    handle to UpdateButton (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
-    disp('Update clicked... Closing for now');
-    close(handles.figure1);
+    global SimulationSetup
+    
+    SimulationSetup.End = true;
+%     disp('Update clicked... Closing for now');
+%     close(handles.figure1);
 
 
 function updateGUI()
-    guiHandle = GUI;
+    global guiHandle
+%     guiHandle = GUI
+    figure(guiHandle);
     gh = guihandles(guiHandle);
     guiAxes = gh.axes1;    
     
@@ -132,7 +136,6 @@ function updateGUI()
     ylim([-1 (vm.lanes+1)]);   
     xl=xlim;
     yl=ylim;
-    width=xl(2)-xl(1);
     height=yl(2)-yl(1);
     
     set(guiAxes, 'YTick', -1:(vm.lanes+2));
@@ -142,17 +145,17 @@ function updateGUI()
     hold on;
     
     % Plot grass
-    r = rectangle('Position',[xl(1)-5 -1 width+10 height]);
+    r = rectangle('Position',[0 -1 1000 height]);
     set(r, 'FaceColor', 'green');
     hold on
     
     % Plot asphalt
-    r = rectangle('Position',[xl(1)-5 -.5 width+10 vm.lanes+1]);
+    r = rectangle('Position',[0 -.5 1000 vm.lanes+1]);
     set(r, 'FaceColor','black');
     
     % Plot lane markers
     for i=-.5:vm.lanes+2
-        l=line(xlim,[i i]);
+        l=line([0 1000],[i i]);
         set(l, 'Color', 'white');
         set(l, 'LineStyle', '--');
     end
@@ -197,6 +200,7 @@ if xlim-step >= 0
     set(guiAxes, 'XLim', get(guiAxes, 'XLim') - step);
     xl=xlim;
     xlim([xl(1) xl(1)+range]);
+    updateGUI();
 end
 
 
@@ -212,6 +216,7 @@ range = str2double(get(handles.edit2,'String'));
 % set(guiAxes, 'XLim', get(guiAxes, 'XLim') + step);
 xl=xlim;
 xlim([xl(1) xl(1)+range] + step);
+updateGUI();
 
 
 

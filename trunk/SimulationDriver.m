@@ -18,6 +18,7 @@ clear all
 
 global CaravanControllerSetup
 global SimulationSetup
+global guiHandle
 % Initialize variables
 turnNumber = 1;
 selection = 0;
@@ -37,6 +38,7 @@ SimulationSetup.TrafficDensityModel     = 'normal';
 SimulationSetup.SimulationRunLength     = 180;
 SimulationSetup.SimulationRunUnits      = 'Seconds';
 SimulationSetup.Pause                   = false;
+SimulationSetup.End                   = false;
 
 while ~startSimulation
     selection = menu('Main Menu',...
@@ -97,7 +99,11 @@ setappdata(guiHandle,'vm',vm);
 GUI('updateGUI')
 
 while ~simulationOver
-
+    tic
+    if SimulationSetup.End == true
+        break;
+    end
+    
     if SimulationSetup.Pause == true
         pause(1);
         GUI('updateGUI')
@@ -124,7 +130,9 @@ while ~simulationOver
     step = str2double(get(gh.edit1,'String'));
     range = str2double(get(gh.edit2,'String'));
     xlim([step*fix(vm.allVehicles(1).posY/step)-range/2 step*fix(vm.allVehicles(1).posY/step)+range/2]);
-    
+
+    elapsedTime=toc
+    pause(tinc-elapsedTime);
     
 end
 
