@@ -131,8 +131,8 @@ while ~simulationOver
     range = str2double(get(gh.edit2,'String'));
     xlim([step*fix(vm.allVehicles(1).posY/step)-range/2 step*fix(vm.allVehicles(1).posY/step)+range/2]);
 
-    elapsedTime=toc
-    pause(tinc-elapsedTime);
+    elapsedTime=toc;
+    %pause(tinc-elapsedTime);
     
 end
 
