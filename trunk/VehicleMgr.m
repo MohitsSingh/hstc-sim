@@ -41,6 +41,10 @@ classdef VehicleMgr <handle
                     index = obj.highway(i, 1);
                     v = obj.allVehicles(index);
                     v = Advance(v, timeDelta, obj.highway, i);
+                    
+                    %update highway array so that cars behind can see an
+                    %accurate position
+                    obj.highway(i, 2) = v.posY;
                     obj.allVehicles(index) = v;
                 end
             end
