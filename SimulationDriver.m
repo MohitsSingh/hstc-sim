@@ -111,6 +111,7 @@ while ~simulationOver
     end
         
     vm.TimeStep(tinc);
+    cv.Update();
     
     %check for exit conditions
     if SimulationSetup.SimulationRunUnits == 'Seconds'
@@ -129,7 +130,7 @@ while ~simulationOver
     gh=guihandles(guiHandle);
     step = str2double(get(gh.edit1,'String'));
     range = str2double(get(gh.edit2,'String'));
-    xlim([step*fix(vm.allVehicles(1).posY/step)-range/2 step*fix(vm.allVehicles(1).posY/step)+range/2]);
+    xlim([step*fix(vm.currentVehicles(1).posY/step)-range/2 step*fix(vm.currentVehicles(1).posY/step)+range/2]);
 
     elapsedTime=toc;
     %pause(tinc-elapsedTime);
