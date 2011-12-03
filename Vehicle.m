@@ -74,6 +74,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         end
         
         function obj = Advance(obj, deltaTinSeconds, highway, highwayIndex)
+            assert(obj.lane >= 0);
             % Get our proposed new position.  If someone is between our
             % current position and that position, move to just behind the
             % closest one.
