@@ -2,6 +2,12 @@ classdef TrafficGen
     %UNTITLED2 Summary of this class goes here
     %   Detailed explanation goes here
     
+    properties(Constant)
+        % This number represents the percentange of vehicles that want to
+        % join a caravan.
+        caravanThreshold = .15;
+    end
+
     properties
         arrivalTimes;       % Sorted set of arrival times for each lane.
         timeIndex;          % Next time index (per lane).  Only incremented when a 
@@ -9,7 +15,7 @@ classdef TrafficGen
         previousTime;       % Tells the last time stamp that was used 
         timeStep;           % Time step used for this simulation run.
         lanes;              % Number of lanes
-        
+        lastVehicleId;      % Last ID used for a vehicle.
     end
     
     methods
@@ -20,6 +26,7 @@ classdef TrafficGen
             obj.previousTime = 0;
             obj.timeIndex = zeros(1, 0);
             obj.lanes = 0;
+            obj.lastVehicleId = 0;
         end
         
         % Method to initial for a run.
@@ -31,6 +38,7 @@ classdef TrafficGen
             obj.previousTime = 0;
             obj.timeStep = timeStep;
             obj.lanes = lanes;
+            obj.lastVehicleId = 0;
             
             % Spread the arrival rate over the number of lanes.
             meanArrival = 1/(arrivalRate/lanes);
@@ -57,22 +65,58 @@ classdef TrafficGen
         function [obj, vehicles] = TimeStep(obj)
             time = obj.previousTime + obj.timeStep;
             vehicles = Vehicle.empty;
+            vId = obj.lastVehicleId;
             % For each lane, see if we have to create any vehicles.
-            for lane = 1:obj.lanes
+            % Don't do the caravan lane;
+            for lane = 1:obj.lanes - 1
                 % Now look at the arrival times for this lane, starting at
                 % the index previously saved.  While there are arrival
                 % times less than the current time, create a vehicle
                 i = obj.timeIndex(lane);
+                addedOneThisLane = false;
                 while (obj.arrivalTimes(lane, i) < time)
-                    fprintf(1, 'Creating a vehicle\n');
-                    vehicles = [vehicles Vehicle];
+                    if (~addedOneThisLane)
+                        addedOneThisLane = true;
+                        vId = vId + 1;
+                        fprintf(1, 'Creating a vehicle, lane %d, id %d\n',...
+                                lane, vId);
+                        v = TrafficGen.NewVehicle(lane, vId, obj.caravanThreshold);
+                        vehicles = [vehicles v];
+                    end
                     i = i + 1;
                 end
                 obj.timeIndex(lane) = i;
             end
             obj.previousTime = time;
+            obj.lastVehicleId = vId;
         end
         
     end
+    
+   methods(Static)
+    function v = NewVehicle (lane, id, caravanThreshold)
+        v = Vehicle;
+        v.lane = lane;
+        v.id = id;
+        
+        % For the velocity of the vehicle, we will use a normal distribution
+        % and offset it based on the lane number.  The range will be +/- 10
+        % around a nominal speed.  The function to determin the speed is 55
+        % + ((lane - 1) * 10)
+        nominalSpeed = 55 + ((lane - 1) * 10);
+        
+        % Range is +/- 1 0 around the nominal value
+        loSpeed = nominalSpeed - 10;
+        hiSpeed = nominalSpeed + 10;
+        v.initialVelocity = loSpeed + (hiSpeed - loSpeed) * rand();
+        
+        % We will no assume that a certain percentange of a nominal
+        % distribution of vehicles want to join a caravan.  This percentage
+        % is a constant (caravanReqests);
+        if (rand() < caravanThreshold)
+            v.wantsCaravan = true;
+        end
+    end
+   end
 end
 
