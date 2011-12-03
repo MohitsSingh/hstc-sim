@@ -127,7 +127,7 @@ function updateGUI()
     range = str2double(get(gh.edit2,'String'));
 
     vm = getappdata(guiHandle, 'vm');
-    vehicles = vm.allVehicles;
+    vehicles = vm.currentVehicles;
       
     cla;
     
