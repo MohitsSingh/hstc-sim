@@ -4,7 +4,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
     
     properties
         id              = 0;
-        lane            = 0.0; %miles?
+        lane            = 0;   %if lane is -1, not on highway.
         posY            = 0.0; %miles
         velocity        = 0.0; %mph
         acceleration    = 3.0; %ft/s/s 2-20ft/s/s
@@ -19,7 +19,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
 % cornering 	0.7–0.9         0.9–1.0 	3               ??        
 
         entryRamp       = 0;
-        destinationRamp = 0;
+        destinationRamp = 10000.0;       % Set to high value by default.
         
         destination     = 0;    %in miles.
         
@@ -80,7 +80,18 @@ classdef Vehicle < hgsetget % subclass hgsetget
             newPos = GetNewPos(obj, deltaTinSeconds);
 %           vel = obj.velocity;
 %           acc = obj.targetRate;
-            
+
+            % If we are at or beyond our destinationRamp, exit now.
+            if (obj.posY >= obj.destinationRamp)
+                % Exit by setting our lane to -1 and leaving.  On the next
+                % go around, the VM will not put us on the highway.
+                obj.lane = -1;
+                disp('==================================');
+                fprintf(1, '%d EXITING HIGHWAY\n', obj.id);
+                disp('==================================');
+                return;
+            end
+
             % Now search for cars forward from our position and see if we
             % can go there.
             % Once we find the next one in our lane, we need to see where

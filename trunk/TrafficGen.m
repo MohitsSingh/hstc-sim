@@ -116,6 +116,9 @@ classdef TrafficGen
         if (rand() < caravanThreshold)
             v.wantsCaravan = true;
         end
+        
+        % Not pick a desitination ramp anywhere from 5 to 500 miles.
+        v.destinationRamp = 5+(500-5) * rand();
     end
    end
 end

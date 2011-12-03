@@ -4,13 +4,14 @@ classdef VehicleMgr <handle
     
     properties
         lanes = 0;
-        allVehicles = Vehicle.empty;    % All vehicles in the system.
+        currentVehicles = Vehicle.empty;    % All vehicles in the system.
         highway;                        % The structure of the highway is
-                                        % column 1 is the index into allVehicles
+                                        % column 1 is the index into currentVehicles
                                         % column 2 is the lane that vehicle is in
                                         % column 3 is the distance from the beginning of
                                         % the highway of that vehicle.
                                         % There may be zeros within the array
+        exitedVehicles = Vehicle.empty; % Those vehicles that have left the highway.
     end
     
     methods
@@ -23,7 +24,7 @@ classdef VehicleMgr <handle
         % Function to add vehicles
         function obj = AddVehicles(obj, newVehicles)
             % Append to the all vehicles array
-            obj.allVehicles = [obj.allVehicles newVehicles];
+            obj.currentVehicles = [obj.currentVehicles newVehicles];
             % After adding the vehicles, rebuild the array that represents
             % the highway
             obj = BuildHighway(obj);
@@ -39,13 +40,13 @@ classdef VehicleMgr <handle
             for i = size(obj.highway, 1) :-1: 1
                 if (obj.highway(i, 2) == caravanLane)
                     index = obj.highway(i, 1);
-                    v = obj.allVehicles(index);
+                    v = obj.currentVehicles(index);
                     v = Advance(v, timeDelta, obj.highway, i);
                     
                     %update highway array so that cars behind can see an
                     %accurate position
                     obj.highway(i, 2) = v.posY;
-                    obj.allVehicles(index) = v;
+                    obj.currentVehicles(index) = v;
                 end
             end
 %             disp('Other LANES');
@@ -53,9 +54,9 @@ classdef VehicleMgr <handle
             for i = size(obj.highway, 1) :-1: 1
                 if ((obj.highway(i, 2) ~= caravanLane) && (obj.highway(i, 2) ~= 0))
                     index = obj.highway(i, 1);
-                    v = obj.allVehicles(index);
+                    v = obj.currentVehicles(index);
                     v = Advance(v, timeDelta, obj.highway, i);
-                    obj.allVehicles(index) = v;
+                    obj.currentVehicles(index) = v;
                 end
             end
             
@@ -64,12 +65,20 @@ classdef VehicleMgr <handle
             for i = size(obj.highway, 1) :-1: 1
                 if (obj.highway(i, 2) == 0)
                     index = obj.highway(i, 1);
-                    v = obj.allVehicles(index);
+                    v = obj.currentVehicles(index);
                     v = Enter(v, timeDelta, obj.highway, i);
-                    obj.allVehicles(index) = v;
+                    obj.currentVehicles(index) = v;
                 end
             end
             
+            % Now for all those from currentVehicles that have exited,
+            % move them to exitedVehicles.
+            for v = length(obj.currentVehicles):-1:1
+                if (obj.currentVehicles(v).lane <= 0)
+                    obj.exitedVehicles = [obj.exitedVehicles obj.currentVehicles(v)];
+                    obj.currentVehicles(v) = [];
+                end
+            end
             
             % Now rebuild the highway.
             obj = BuildHighway(obj);
@@ -78,11 +87,11 @@ classdef VehicleMgr <handle
         function obj = BuildHighway(obj)
             % Get a new highway that is more than we will need.  This will
             % allow us to add without incurring overhead of adding
-            obj.highway = zeros(length(obj.allVehicles), 3);
+            obj.highway = zeros(length(obj.currentVehicles), 3);
             % Now re-build the highway.  It consists of the index, location
             % and lane for every vehicle
-            for v = 1:length(obj.allVehicles)
-                obj.highway(v, 1:3) = [v, obj.allVehicles(v).lane, obj.allVehicles(v).posY];
+            for v = 1:length(obj.currentVehicles)
+                obj.highway(v, 1:3) = [v, obj.currentVehicles(v).lane, obj.currentVehicles(v).posY];
             end
             
             % Now sort the rows by position
@@ -116,19 +125,19 @@ classdef VehicleMgr <handle
         function LaneChange (currentIndex)
             vm = VehicleMgr.getInstance;
             vehicleToMove = vm.highway(currentIndex, 1);
-            idMoving = vm.allVehicles(vm.highway(currentIndex, 1)).id;
-            myDistance = vm.allVehicles(vehicleToMove).posY;
+            idMoving = vm.currentVehicles(vm.highway(currentIndex, 1)).id;
+            myDistance = vm.currentVehicles(vehicleToMove).posY;
             i = currentIndex + 1;
-            while (i <= size(vm.highway,1)) && (myDistance > vm.allVehicles(vm.highway(i, 1)).posY)
+            while (i <= size(vm.highway,1)) && (myDistance > vm.currentVehicles(vm.highway(i, 1)).posY)
                 vm.highway(i - 1, 1) = vm.highway(i, 1);
                 vm.highway(i - 1, 2) = vm.highway(i, 2);
                 vm.highway(i - 1, 3) = vm.highway(i, 3);
                 i = i + 1;
             end
             if (i > size(vm.highway, 1))
-                vm.highway(i - 1, 1:3) = [vehicleToMove, vm.allVehicles(vehicleToMove).lane, vm.allVehicles(vehicleToMove).posY];
+                vm.highway(i - 1, 1:3) = [vehicleToMove, vm.currentVehicles(vehicleToMove).lane, vm.currentVehicles(vehicleToMove).posY];
             else
-                vm.highway(i, 1:3) = [vehicleToMove, vm.allVehicles(vehicleToMove).lane, vm.allVehicles(vehicleToMove).posY];
+                vm.highway(i, 1:3) = [vehicleToMove, vm.currentVehicles(vehicleToMove).lane, vm.currentVehicles(vehicleToMove).posY];
             end
         end
         
@@ -141,11 +150,11 @@ classdef VehicleMgr <handle
 
             %find nearest car in front of me, in my lane
             %posX = myposX, posY > my Posy
-            numCars = length(vm.allVehicles);
+            numCars = length(vm.currentVehicles);
             for i = 1:numCars-1
-                if vm.allVehicles(i) == obj %find my car
-                    if ~isempty(vm.allVehicles(i+1)) 
-                        distance =  (vm.allVehicles(i+1).posY - vm.allVehicles(i).posY );
+                if vm.currentVehicles(i) == obj %find my car
+                    if ~isempty(vm.currentVehicles(i+1)) 
+                        distance =  (vm.currentVehicles(i+1).posY - vm.currentVehicles(i).posY );
                     else
                         %no one in front of me
                         distance = 9999;
