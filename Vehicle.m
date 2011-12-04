@@ -124,7 +124,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 %tailend of the car in front of us minus the caravan
                 %spacing
                 if obj.caravanNumber ~= 0 
-                    obj.posY = min(newPos, inFrontPos - obj.minNonCaravanDistance)
+                    obj.posY = min(newPos, inFrontPos - obj.minCaravanDistance);
                 elseif (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     % We can advance the entire way
                     obj.posY = newPos;
