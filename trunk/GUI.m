@@ -138,6 +138,8 @@ function updateGUI()
     yl=ylim;
     height=yl(2)-yl(1);
     
+    set(guiAxes, 'Visible', 'off');
+    
     set(guiAxes, 'YTick', -1:(vm.lanes+2));
     set(guiAxes, 'YTickLabel', {'', '', 1:vm.lanes-1, 'HSTC', ''});
     set(guiAxes, 'XTick', xl(1):step:xl(2));
@@ -159,31 +161,6 @@ function updateGUI()
         set(l, 'LineStyle', '--');
     end
     
-    % Compile stats
-    numInCaravan = sum([vehicles.caravanNumber] > 0);
-    numToJoin = sum([vehicles.wantsCaravan]);
-    numNotInCaravan = sum([vehicles.caravanNumber] <= 0);
-    avgVelocity = mean([vehicles.velocity]);
-    avgEconomy = mean([vehicles.fuelEconomy]);
-    
-    % Plot rectangles and compile statistics for vehicles
-    for i=1:length(vehicles)
-        v = vehicles(i);
-        r = rectangle('Position',[v.posY v.lane-.05 v.length .1],'Curvature',[0 0]);
-        
-        % todo: add more options
-        if v.wantsCaravan
-            set(r, 'FaceColor','blue');
-        elseif v.caravanNumber > 0 % In caravan
-            set(r, 'FaceColor','green');
-        else
-            set(r,'FaceColor',[1 0.5 0.2]); % orange
-        end
-    end
-    
-    set(gh.numberValues,'String',[numInCaravan; numToJoin; numNotInCaravan]);
-    set(gh.averageValues,'String',[avgVelocity; avgEconomy]);
-    
     % Handle focus stuff
     focusCheckbox = gh.focusCheckbox;
     focusSelector = gh.focusSelector;
@@ -194,9 +171,44 @@ function updateGUI()
        %    honored
         xlim([step*fix(vm.currentVehicles(focusId).posY/step)-range/2 ...
             step*fix(vm.currentVehicles(focusId).posY/step)+range/2]);
+        vm.currentVehicles(focusId).posY
+        xl=xlim
+        set(guiAxes, 'XTick', xl(1):step:xl(2));
     end
     
+    % Compile stats
+    numInCaravan = sum([vehicles.caravanNumber] > 0);
+    numToJoin = sum([vehicles.wantsCaravan]);
+    numNotInCaravan = sum([vehicles.caravanNumber] <= 0);
+    avgVelocity = mean([vehicles.velocity]);
+    avgEconomy = mean([vehicles.fuelEconomy]);
+    
+    % Plot rectangles and compile statistics for vehicles
+    for i=1:length(vehicles)
+        v = vehicles(i);
+        
+        % Only draw if we're currently in view
+        if (xl(1) <= v.posY <= xl(2))
+            r = rectangle('Position',[v.posY v.lane-.05 v.length .1], ...
+                'Curvature',[0 0]);
+
+            % todo: add more options
+            if v.wantsCaravan
+                set(r, 'FaceColor','blue');
+            elseif v.caravanNumber > 0 % In caravan
+                set(r, 'FaceColor','green');
+            else
+                set(r,'FaceColor',[1 0.5 0.2]); % orange
+            end
+        end
+    end
+    
+    set(gh.numberValues,'String',[numInCaravan; numToJoin; numNotInCaravan]);
+    set(gh.averageValues,'String',[avgVelocity; avgEconomy]);
+    
     set(focusSelector, 'String', [vehicles.id]');
+    
+    set(guiAxes, 'Visible', 'on');
         
 
 % --- Executes on button press in scrollLeft.
