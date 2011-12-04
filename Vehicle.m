@@ -64,7 +64,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
             maxDelta = obj.targetRate *3600 / 5280 *deltaTinSeconds; %convert from ft/s/s to m/h/s
             obj.velocity = min(max( obj.targetVelocity,obj.velocity-maxDelta),obj.velocity+maxDelta) ;
             pos = obj.posY + deltaTinSeconds / 3600 * obj.velocity; %convert seconds to hours for math
-            fprintf('id=%d was %f, now %f at %f mph\n',obj.id, obj.posY,pos, obj.velocity);
         end
         
         function closest = ClosestInLane(obj, lane, highway, startIndex)
@@ -82,7 +81,10 @@ classdef Vehicle < hgsetget % subclass hgsetget
         end
         
         function obj = Advance(obj, deltaTinSeconds, highway, highwayIndex)
-            assert(obj.lane >= 0);
+            % Don't advance if we have exited.
+            if (obj.lane < 0)
+                return;
+            end
             
             % Get our proposed new position.  If someone is between our
             % current position and that position, move to just behind the
@@ -99,7 +101,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 % Exit by setting our lane to -1 and leaving.  On the next
                 % go around, the VM will not put us on the highway.
                 obj.lane = -1;
-                
                 % Save the distance travelled (just in case)
                 obj.distanceTraveled = obj.posY;
                 return;
@@ -147,8 +148,11 @@ classdef Vehicle < hgsetget % subclass hgsetget
                                 newPosThisLane = 0;
                             end                    
                             % Complain if we backup
-                            assert (newPosThisLane >= obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f',...
-                                    obj.posY, newPos, obj.minNonCaravanDistance);
+                            assert (newPosThisLane >= obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f, newPosThisLane = %f, inFrontPos = %f',...
+                                    obj.posY, newPos, obj.minNonCaravanDistance, newPosThisLane, inFrontPos);
+                            if (newPosThisLane <= obj.posY)
+                                fprintf(1, '!');
+                            end
                             obj.posY = newPosThisLane;
                             % Need to adjust current speed here?
                         end
@@ -159,6 +163,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
 
             % update drive time.
             obj.driveTime = obj.driveTime + deltaTinSeconds;
+            % Save the distance travelled (just in case)
+            obj.distanceTraveled = obj.posY;
         end
         
         % See if we can change lanes and how far we could advance in that
