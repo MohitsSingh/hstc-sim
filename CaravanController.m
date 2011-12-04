@@ -31,7 +31,7 @@ classdef CaravanController  <handle
                     %todo improve the distance calculations...maybe use
                     %time?
                     if (v.posY - obj.allCaravans(i).position < 30) ...
-                        && v.posY - obj.allCaravans(i).position > 20) ...
+                        && (v.posY - obj.allCaravans(i).position > 20) ...
                         &&  (obj.allCaravans(i).destination - v.destination > 10)
                         availableCaravan    = obj.allCaravans(i);
                         wasFound            = true;
@@ -45,8 +45,8 @@ classdef CaravanController  <handle
         %some criteria...
 %         they have similar destinations
 %         they are with 20miles of each other
-        function [formCaravan, whichCars] = shouldIFormACaravan(obj)
-            whichCars = empty;
+        function [formCaravan, whichCars] = shouldIFormACaravan(obj,v)
+            whichCars = [];
             formCaravan = false;
         end
         
