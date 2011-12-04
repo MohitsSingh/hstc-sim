@@ -41,6 +41,7 @@ CaravanControllerSetup.MaxCaravanDistance   = 100;
 SimulationSetup.TrafficDensityModel     = 'normal';
 SimulationSetup.SimulationRunLength     = 180;
 SimulationSetup.SimulationRunUnits      = 'Seconds';
+SimulationSetup.focusId                 = 0;
 SimulationSetup.Pause                   = false;
 SimulationSetup.End                   = false;
 
@@ -59,9 +60,11 @@ while ~startSimulation
         case 1
             Kpp1_Generate;
             startSimulation = true;
+            SimulationSetup.focusId = 1;
         case 2
             Kpp2_Generate;
             startSimulation = true;
+            SimulationSetup.focusId = 1;
         case 3
             Kpp3_Generate;
             startSimulation = true;
@@ -102,6 +105,13 @@ guiHandle = GUI;
 setappdata(guiHandle,'vm',vm);
 GUI('updateGUI')
 
+gh=guihandles(guiHandle);
+
+if SimulationSetup.focusId > 0
+   set(gh.focusCheckbox, 'Value', 1);
+   set(gh.focusSelector, 'Value', SimulationSetup.focusId); 
+end
+
 while ~simulationOver
     tic
     if SimulationSetup.End == true
@@ -130,11 +140,10 @@ while ~simulationOver
     setappdata(guiHandle,'vm',vm);
     GUI('updateGUI')
     
-    %for Kpp1 and 2, follow caravan
-    gh=guihandles(guiHandle);
-    step = str2double(get(gh.edit1,'String'));
-    range = str2double(get(gh.edit2,'String'));
-    xlim([step*fix(vm.currentVehicles(1).posY/step)-range/2 step*fix(vm.currentVehicles(1).posY/step)+range/2]);
+%     %for Kpp1 and 2, follow caravan
+%     step = str2double(get(gh.edit1,'String'));
+%     range = str2double(get(gh.edit2,'String'));
+%     xlim([step*fix(vm.currentVehicles(1).posY/step)-range/2 step*fix(vm.currentVehicles(1).posY/step)+range/2]);
 
     elapsedTime=toc;
     %pause(tinc-elapsedTime);

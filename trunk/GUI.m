@@ -22,7 +22,7 @@ function varargout = GUI(varargin)
 
 % Edit the above text to modify the response to help GUI
 
-% Last Modified by GUIDE v2.5 30-Nov-2011 22:59:52
+% Last Modified by GUIDE v2.5 03-Dec-2011 23:45:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -87,7 +87,7 @@ if strcmp(get(hObject,'Visible'),'off')
     set(guiAxes, 'CameraPositionMode', 'auto');
     set(guiAxes, 'CameraTargetMode', 'auto');
 
-    set(handles.UpdateButton, 'String', 'Quit (for now)');
+%     set(handles.UpdateButton, 'String', 'Quit (for now)');
 end
 
 % UIWAIT makes GUI wait for user response (see UIRESUME)
@@ -121,7 +121,7 @@ function updateGUI()
 %     guiHandle = GUI
     figure(guiHandle);
     gh = guihandles(guiHandle);
-    guiAxes = gh.axes1;    
+    guiAxes = gh.axes1;
     
     step = str2double(get(gh.edit1,'String'));
     range = str2double(get(gh.edit2,'String'));
@@ -185,6 +185,20 @@ function updateGUI()
     
     set(gh.numberValues,'String',[numInCaravan; numToJoin; numNotInCaravan]);
     set(gh.averageValues,'String',[avgVelocity; avgEconomy]);
+    
+    % Handle focus stuff
+    focusCheckbox = gh.focusCheckbox;
+    focusSelector = gh.focusSelector;
+    
+    if get(focusCheckbox, 'Value')
+       focusId = get(focusSelector, 'Value');
+       % TODO: Check accuracy of next line. Seems like range isn't always
+       %    honored
+        xlim([step*fix(vm.currentVehicles(focusId).posY/step)-range/2 ...
+            step*fix(vm.currentVehicles(focusId).posY/step)+range/2]);
+    end
+    
+    set(focusSelector, 'String', [vehicles.id]');
         
 
 % --- Executes on button press in scrollLeft.
@@ -288,3 +302,35 @@ global SimulationSetup
         SimulationSetup.Pause = true;
     end
     
+
+
+% --- Executes on button press in focusCheckbox.
+function focusCheckbox_Callback(hObject, eventdata, handles)
+% hObject    handle to focusCheckbox (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hint: get(hObject,'Value') returns toggle state of focusCheckbox
+
+
+% --- Executes on selection change in focusSelector.
+function focusSelector_Callback(hObject, eventdata, handles)
+% hObject    handle to focusSelector (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns focusSelector contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from focusSelector
+
+
+% --- Executes during object creation, after setting all properties.
+function focusSelector_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to focusSelector (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
