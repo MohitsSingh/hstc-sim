@@ -60,6 +60,9 @@ classdef Vehicle < hgsetget % subclass hgsetget
         function pos = GetNewPos(obj, deltaTinSeconds)
             maxDelta = obj.targetRate *3600 / 5280 *deltaTinSeconds; %convert from ft/s/s to m/h/s
             obj.velocity = min(max( obj.targetVelocity,obj.velocity-maxDelta),obj.velocity+maxDelta) ;
+            if obj.velocity > 0
+                obj.velocity = 0;
+            end
             pos = obj.posY + deltaTinSeconds / 3600 * obj.velocity; %convert seconds to hours for math
         end
         
