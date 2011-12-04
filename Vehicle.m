@@ -45,6 +45,10 @@ classdef Vehicle < hgsetget % subclass hgsetget
         drv             = Driver; %simulator of human agent
         accModule       = Acc;      %the computerized driver (no steering, though)
         
+        % Statitics to collect for KPP4
+        driveTime = 0.0;        % Time from entry to exit in seconds
+        distanceTraveled = 0.0; % How far have we gone?  In miles
+        
         %Minimum distance between cars NOT in caravan
         minNonCaravanDistance = 0.005681 % 30 feet in miles.
         
@@ -95,9 +99,9 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 % Exit by setting our lane to -1 and leaving.  On the next
                 % go around, the VM will not put us on the highway.
                 obj.lane = -1;
-                disp('==================================');
-                fprintf(1, '%d EXITING HIGHWAY\n', obj.id);
-                disp('==================================');
+                
+                % Save the distance travelled (just in case)
+                obj.distanceTraveled = obj.posY;
                 return;
             end
 
@@ -143,7 +147,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                                 newPosThisLane = 0;
                             end                    
                             % Complain if we backup
-                            assert (newPosThisLane > obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f',...
+                            assert (newPosThisLane >= obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f',...
                                     obj.posY, newPos, obj.minNonCaravanDistance);
                             obj.posY = newPosThisLane;
                             % Need to adjust current speed here?
@@ -152,6 +156,9 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 end
             end
 %             obj.drv.Agent(obj);
+
+            % update drive time.
+            obj.driveTime = obj.driveTime + deltaTinSeconds;
         end
         
         % See if we can change lanes and how far we could advance in that
@@ -229,7 +236,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
             if (closest < 0)
                 obj.lane = 1;
             else
-                disp('Have a car in front');
                 inFrontPos = highway(closest, 3);
                 if (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     obj.posY = newPos;
