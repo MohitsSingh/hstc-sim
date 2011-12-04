@@ -167,11 +167,11 @@ function updateGUI()
     
     if get(focusCheckbox, 'Value')
        focusId = get(focusSelector, 'Value');
-       % TODO: Check accuracy of next line. Seems like range isn't always
-       %    honored
-        xlim([step*fix(vm.currentVehicles(focusId).posY/step)-range/2 ...
-            step*fix(vm.currentVehicles(focusId).posY/step)+range/2]);
-        set(guiAxes, 'XTick', xl(1):step:xl(2));
+       centerFocus = step*round(vm.currentVehicles(focusId).posY/step);
+       diff = mod(range/2, step);
+       xlim([centerFocus-range/2+diff centerFocus+range/2+diff]);
+       xl=xlim;
+       set(guiAxes, 'XTick', xl(1):step:xl(2));
     end
     
     % Compile stats

@@ -3,11 +3,13 @@
 %clear other peoples data
 
 clear c;
-clear vm;
+clear VehicleMgr;
+clear CaravanController;
 clear allCars;
 clear target;
 
-c = Caravan.getInstance;
+c = Caravan;
+cc = CaravanController.getInstance;
 vm = VehicleMgr.getInstance;
 
 %createa a caravan of ten cars
@@ -23,21 +25,23 @@ for i = 1:10
         allCars(i).posY = allCars(i-1).posY - allCars(i-1).length - c.minVehicleSpacing ;
     end
     
-    %put all cars in caravan lane
-    allCars(i).lane = 3;
+    if i == 4
+        allCars(i).wantsOutOfCaravan = true;
+    end
     
-    c.AddToVehicleList(allCars(i).id);
+    %put all cars in caravan lane
+    allCars(i).lane = 4;
+    %add to caravan
+    allCars(i).caravanNumber = 1;
+    
+    c.AddToVehicleList(allCars(i));
     
 end
 
-
-vm.AddVehicles(allCars);
-
 %give the caravan a place to go...all the way to the end
-c.destination = 50;
+c.destination = 100;
 
 %add caravan to caravan controller
+cc.AddCaravan(c);
 
-
-%Make car in the middle want to get out
-allCars(i).wantsOutOfCaravan = true;
+vm.AddVehicles(allCars);
