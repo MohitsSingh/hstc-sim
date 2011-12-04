@@ -16,6 +16,7 @@ classdef VehicleMgr <handle
     
     methods
         % Constructor - Requires number of lanes and timesteps.
+        %don;t call this directly...use getInstance instead
         function obj = VehicleMgr(lanesIn)
             obj.lanes = lanesIn;
             obj.highway = zeros(0, 3);
