@@ -14,11 +14,15 @@
 close all   %close all previously opended figures
 clc
 clear
-clear all
+
 
 global CaravanControllerSetup
 global SimulationSetup
 global guiHandle
+
+cc = CaravanController;
+vm = VehicleMgr.getInstance;
+
 % Initialize variables
 turnNumber = 1;
 selection = 0;
@@ -111,7 +115,7 @@ while ~simulationOver
     end
         
     vm.TimeStep(tinc);
-    cv.Update();
+    cc.Update();
     
     %check for exit conditions
     if SimulationSetup.SimulationRunUnits == 'Seconds'
