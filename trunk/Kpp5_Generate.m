@@ -29,7 +29,8 @@ for i = 1:CaravanControllerSetup.MaxCaravanSize
     if i == 4
 %         allCars(i).acceleration = -32; % 1g of deceleration
 %         TODO doesn't look like acceleration/deceleration is hooked up...
-        allCars(i).velocity = 20; % ...for now just set velocity a lot lower
+%         allCars(i).velocity = 20; % ...for now just set velocity a lot lower
+        allCars(i).targetRate = -32;
     end
     
     %put all cars in caravan lane
