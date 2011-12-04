@@ -15,7 +15,7 @@ tg = InitTraffic (tg, lanes, arrivalRate, hoursForTest, timeStep, false);
 vm = VehicleMgr.getInstance;
 
 currentTime = 0;
-printOutTime = 60/deltaT;       % Print out a marker every simulated minute.
+printOutTime = 10*60/deltaT;       % Print out a marker every simulated minute.
 printOutCount = 0;
 while (currentTime < hoursForTest)
     %First generate the vehicles for this time step.
@@ -47,10 +47,10 @@ for i = 1:length(vm.exitedVehicles)
     ttlDistance = ttlDistance + vm.exitedVehicles(i).distanceTraveled;
     ttlTime = ttlTime + vm.exitedVehicles(i).driveTime;
 end
-ttlDistance
-ttlTime/60/60
+ttlDistance;
+ttlTime/60/60;
     
-length(vm.currentVehicles) + length(vn.exitedVehicles)
+length(vm.currentVehicles) + length(vm.exitedVehicles);
 
 end
 
