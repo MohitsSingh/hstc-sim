@@ -15,7 +15,11 @@ classdef TrafficGen
         previousTime;       % Tells the last time stamp that was used 
         timeStep;           % Time step used for this simulation run.
         lanes;              % Number of lanes
+        travelLanes;        % Number of lanes open for general travel. Either
+                            % lanes (if not having a caravan lane) or lanes
+                            % - 1 (if having a caravan lane)
         lastVehicleId;      % Last ID used for a vehicle.
+        useCaravans;        % True if we are using caravans, false if not.
     end
     
     methods
@@ -26,24 +30,32 @@ classdef TrafficGen
             obj.previousTime = 0;
             obj.timeIndex = zeros(1, 0);
             obj.lanes = 0;
+            obj.travelLanes = 0;
             obj.lastVehicleId = 0;
+            obj.useCaravans = true;
         end
         
         % Method to initial for a run.
         % This will generate the arrival times for all of the lanes based
         % on the parameters passed in
-        function obj = InitTraffic(obj, lanes, arrivalRate, lengthOfRun, timeStep)
+        function obj = InitTraffic(obj, lanes, arrivalRate, lengthOfRun, timeStep, useCaravans)
             obj.arrivalTimes = zeros(lanes, uint32(lengthOfRun/timeStep));
             obj.timeIndex = ones(1, lanes);
             obj.previousTime = 0;
             obj.timeStep = timeStep;
             obj.lanes = lanes;
             obj.lastVehicleId = 0;
+            obj.useCaravans = useCaravans;
+            if (useCaravans)
+                obj.travelLanes = lanes - 1;
+            else
+                obj.travelLanes = lanes;
+            end
             
             % Spread the arrival rate over the number of lanes.
             meanArrival = 1/(arrivalRate/lanes);
             % Now fill out arrival times for each of the lanes
-            for l = 1:lanes
+            for l = 1:obj.travelLanes
                 lastArrive = 0;
                 i = 0;
                 while (lastArrive < lengthOfRun)
@@ -55,7 +67,6 @@ classdef TrafficGen
                     end
                     lastArrive = obj.arrivalTimes(l, i);
                 end
-                fprintf(1, 'number of arrivals is %d\n', i);
             end
         end
         
@@ -68,19 +79,19 @@ classdef TrafficGen
             vId = obj.lastVehicleId;
             % For each lane, see if we have to create any vehicles.
             % Don't do the caravan lane;
-            for lane = 1:obj.lanes - 1
+            for lane = 1:obj.travelLanes
                 % Now look at the arrival times for this lane, starting at
                 % the index previously saved.  While there are arrival
                 % times less than the current time, create a vehicle
                 i = obj.timeIndex(lane);
                 addedOneThisLane = false;
-                while (obj.arrivalTimes(lane, i) < time)
+                maxIndex = size(obj.arrivalTimes, 2);
+                while ((i < maxIndex) && (obj.arrivalTimes(lane, i) < time))
+                    % Currently we are only creating one vehicle.
                     if (~addedOneThisLane)
                         addedOneThisLane = true;
                         vId = vId + 1;
-                        fprintf(1, 'Creating a vehicle, lane %d, id %d\n',...
-                                lane, vId);
-                        v = TrafficGen.NewVehicle(lane, vId, obj.caravanThreshold);
+                        v = TrafficGen.NewVehicle(lane, vId, obj.caravanThreshold, obj.useCaravans);
                         vehicles = [vehicles v];
                     end
                     i = i + 1;
@@ -94,7 +105,7 @@ classdef TrafficGen
     end
     
    methods(Static)
-    function v = NewVehicle (lane, id, caravanThreshold)
+    function v = NewVehicle (lane, id, caravanThreshold, useCaravans)
         v = Vehicle;
         v.lane = lane;
         v.id = id;
@@ -113,12 +124,14 @@ classdef TrafficGen
         % We will no assume that a certain percentange of a nominal
         % distribution of vehicles want to join a caravan.  This percentage
         % is a constant (caravanReqests);
-        if (rand() < caravanThreshold)
-            v.wantsCaravan = true;
+        if (useCaravans)
+            if (rand() < caravanThreshold)
+                v.wantsCaravan = true;
+            end
         end
         
-        % Not pick a desitination ramp anywhere from 5 to 500 miles.
-        v.destinationRamp = 5+(500-5) * rand();
+        % Not pick a desitination ramp anywhere from 15 to 500 miles.
+        v.destinationRamp = 15+(500-5) * rand();
     end
    end
 end
