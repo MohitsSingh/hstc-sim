@@ -125,6 +125,10 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 %spacing
                 if obj.caravanNumber ~= 0 
                     obj.posY = min(newPos, inFrontPos - obj.minCaravanDistance);
+                    if newPos > inFrontPos - obj.minCaravanDistance
+                        %todo should adjust velocity here.
+                        obj.velocity = obj.velocity * (inFrontPos - obj.minCaravanDistance) / newPos;
+                    end
                 elseif (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     % We can advance the entire way
                     obj.posY = newPos;
