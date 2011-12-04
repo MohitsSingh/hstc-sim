@@ -74,6 +74,7 @@ while ~startSimulation
         case 5
             Kpp5_Generate;
             startSimulation = true;
+            SimulationSetup.focusId = 4;
         case 6
             startSimulation = true;
         case 7  
