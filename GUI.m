@@ -171,8 +171,6 @@ function updateGUI()
        %    honored
         xlim([step*fix(vm.currentVehicles(focusId).posY/step)-range/2 ...
             step*fix(vm.currentVehicles(focusId).posY/step)+range/2]);
-        vm.currentVehicles(focusId).posY
-        xl=xlim
         set(guiAxes, 'XTick', xl(1):step:xl(2));
     end
     
