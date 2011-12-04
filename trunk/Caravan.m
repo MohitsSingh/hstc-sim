@@ -15,8 +15,9 @@ classdef Caravan < hgsetget % subclass hgsetget
     
     methods
         
-        % Create a caravan by loading it from a filename
-
+        function obj = Update(obj)
+            obj.position = obj.allVehicles(1).posY;
+        end
         
         %location = 1 HEAD
         %location = -1 TAIL
