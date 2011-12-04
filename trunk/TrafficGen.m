@@ -112,14 +112,15 @@ classdef TrafficGen
         
         % For the velocity of the vehicle, we will use a normal distribution
         % and offset it based on the lane number.  The range will be +/- 10
-        % around a nominal speed.  The function to determin the speed is 55
+        % around a nominal speed.  The function to determin the speed is 45
         % + ((lane - 1) * 10)
-        nominalSpeed = 55 + ((lane - 1) * 10);
+        nominalSpeed = 45 + ((lane - 1) * 10);
         
         % Range is +/- 1 0 around the nominal value
         loSpeed = nominalSpeed - 10;
         hiSpeed = nominalSpeed + 10;
-        v.initialVelocity = loSpeed + (hiSpeed - loSpeed) * rand();
+        v.velocity = loSpeed + (hiSpeed - loSpeed) * rand();
+        v.targetVelocity = v.velocity;
         
         % We will no assume that a certain percentange of a nominal
         % distribution of vehicles want to join a caravan.  This percentage
@@ -130,8 +131,9 @@ classdef TrafficGen
             end
         end
         
-        % Not pick a desitination ramp anywhere from 15 to 500 miles.
-        v.destinationRamp = 15+(500-5) * rand();
+        % Not pick a desitination ramp anywhere from 10 to 500 miles.
+        v.destinationRamp = 10+(500-5) * rand();
+        v.destination = v.destinationRamp;
     end
    end
 end

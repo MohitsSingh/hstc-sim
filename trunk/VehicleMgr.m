@@ -46,17 +46,20 @@ classdef VehicleMgr <handle
                     
                     %update highway array so that cars behind can see an
                     %accurate position
-                    obj.highway(i, 2) = v.posY;
+                    obj.highway(i, 3) = v.posY;
                     obj.currentVehicles(index) = v;
                 end
             end
 %             disp('Other LANES');
             % Now do the rest of the lanes.
             for i = size(obj.highway, 1) :-1: 1
-                if ((obj.highway(i, 2) ~= caravanLane) && (obj.highway(i, 2) ~= 0))
+                if ((obj.highway(i, 2) ~= caravanLane) && (obj.highway(i, 2) > 0))
                     index = obj.highway(i, 1);
                     v = obj.currentVehicles(index);
                     v = Advance(v, timeDelta, obj.highway, i);
+                    %update highway array so that cars behind can see an
+                    %accurate position
+                    obj.highway(i, 3) = v.posY;
                     obj.currentVehicles(index) = v;
                 end
             end
