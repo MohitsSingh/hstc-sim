@@ -5,8 +5,10 @@ classdef CaravanController  <handle
     %todo handle only vehicles in my zone(so make me support zones)
     
     properties
-        assignedCars = Vehicle.empty;
-        allCaravans = Caravan.empty;
+        assignedCars            ;
+        allCaravans             = Caravan.empty;
+        
+        numAssignedCars         = 0;
     end
     
     methods
@@ -28,8 +30,9 @@ classdef CaravanController  <handle
                 if obj.allCaravans(i).isAbleToTakeNewCars
                     %todo improve the distance calculations...maybe use
                     %time?
-                    if (v.posY - obj.allCaravans(i).position > 20) ...
-                        &  (obj.allCaravans(i).destination - v.destination > 10)
+                    if (v.posY - obj.allCaravans(i).position < 30) ...
+                        && v.posY - obj.allCaravans(i).position > 20) ...
+                        &&  (obj.allCaravans(i).destination - v.destination > 10)
                         availableCaravan    = obj.allCaravans(i);
                         wasFound            = true;
                         break;
@@ -62,8 +65,13 @@ classdef CaravanController  <handle
         %add vehicle to list of cars and caravans to be tracked.  
         %keep track of which car and which caravan
         %remove car from the wants caravan list
-        function obj = AssignCarToCaravan(obj,v)
+        function obj = AssignCarToCaravan(obj,v,whichCaravan)
             %add to the list
+            obj.assignedCars(obj.numAssignedCars+1).vehicle = v;
+            obj.assignedCars(obj.numAssignedCars+1).caravan = whichCaravan;
+            
+            obj.numAssignedCars = obj.numAssignedCars+1;
+            
             %remove car from list of cars wanting a caravan
             v.wantsCaravan      = false;
             %todo...be smarter about moving the car over to the merge lane
@@ -71,6 +79,7 @@ classdef CaravanController  <handle
         end
         
         function obj = Update(obj)
+            global SimulationSetup
             vm = VehicleMgr.getInstance;
             
             %first find cars that need a caravan
@@ -80,7 +89,7 @@ classdef CaravanController  <handle
                 if v.wantsCaravan
                     [found,availC] = obj.isThereASuitableCaravan(v);
                     if found
-                        obj.AssignCarToCaravan(v);
+                        obj.AssignCarToCaravan(v, availC);
                     else
                         [formCaravan,whichCars] =obj.shouldIFormACaravan(v);
                         if formCaravan
@@ -90,14 +99,17 @@ classdef CaravanController  <handle
                 end
             end
             
+            obj.allCaravans.Update();
+            
             %now work on getting cars to their caravan
             %tell the car when to move to caravan merge lane
             %tell caravan when separate to Insert car
             %tell car when to insert
             %remove car from assigned list
-            numAssignedCars = length(obj.assignedCars);
-            for i=1:numAssignedCars
-                
+            for i=1:obj.numAssignedCars
+                 if obj.assignedCars(i).caravan.position > obj.assignedCars(i).vehicle.posY 
+                     SimulationSetup.Pause = true;
+                 end
             end
             
         end
