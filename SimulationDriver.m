@@ -13,7 +13,7 @@
 % Initialization
 close all   %close all previously opended figures
 clc
-clear
+clear classes
 
 
 global CaravanControllerSetup
@@ -103,7 +103,7 @@ t = 0;
 
 guiHandle = GUI;
 setappdata(guiHandle,'vm',vm);
-GUI('updateGUI')
+GUI('updateGUI');
 
 gh=guihandles(guiHandle);
 
@@ -120,7 +120,7 @@ while ~simulationOver
     
     if SimulationSetup.Pause == true
         pause(1);
-        GUI('updateGUI')
+        GUI('updateGUI');
         continue;
     end
         
@@ -128,7 +128,7 @@ while ~simulationOver
     cc.Update();
     
     %check for exit conditions
-    if SimulationSetup.SimulationRunUnits == 'Seconds'
+    if strcmp(SimulationSetup.SimulationRunUnits, 'Seconds')
         if etime(clock, startTime) > SimulationSetup.SimulationRunLength
             simulationOver = True;
         end
@@ -138,13 +138,8 @@ while ~simulationOver
     t = t + tinc;
     
     setappdata(guiHandle,'vm',vm);
-    GUI('updateGUI')
+    GUI('updateGUI');
     
-%     %for Kpp1 and 2, follow caravan
-%     step = str2double(get(gh.edit1,'String'));
-%     range = str2double(get(gh.edit2,'String'));
-%     xlim([step*fix(vm.currentVehicles(1).posY/step)-range/2 step*fix(vm.currentVehicles(1).posY/step)+range/2]);
-
     elapsedTime=toc;
     %pause(tinc-elapsedTime);
     

@@ -133,28 +133,27 @@ function updateGUI()
     
     xl=xlim;
     xlim([xl(1) xl(1)+range]);
-    ylim([-1 (vm.lanes+1)]);   
+    ylim([0 (vm.lanes+1)]);   
     xl=xlim;
     yl=ylim;
     height=yl(2)-yl(1);
     
     set(guiAxes, 'YTick', -1:(vm.lanes+2));
-%     set(guiAxes, 'YTickLabel', {'', 'HSTC', vm.lanes:-1:1});
+    set(guiAxes, 'YTickLabel', {'', '', 1:vm.lanes-1, 'HSTC', ''});
     set(guiAxes, 'XTick', xl(1):step:xl(2));
     
     hold on;
     
     % Plot grass
-    r = rectangle('Position',[0 -1 1000 height]);
+    r = rectangle('Position',[0 0 1000 height]);
     set(r, 'FaceColor', 'green');
-    hold on
     
     % Plot asphalt
-    r = rectangle('Position',[0 -.5 1000 vm.lanes+1]);
+    r = rectangle('Position',[0 .5 1000 vm.lanes]);
     set(r, 'FaceColor','black');
     
     % Plot lane markers
-    for i=-.5:vm.lanes+2
+    for i=.5:vm.lanes+2-.5
         l=line([0 1000],[i i]);
         set(l, 'Color', 'white');
         set(l, 'LineStyle', '--');
@@ -170,7 +169,6 @@ function updateGUI()
     % Plot rectangles and compile statistics for vehicles
     for i=1:length(vehicles)
         v = vehicles(i);
-%         r = rectangle('Position',[v.posY v.lane-1.25 .5 .5],'Curvature',[1 1]);
         r = rectangle('Position',[v.posY v.lane-.05 v.length .1],'Curvature',[0 0]);
         
         % todo: add more options

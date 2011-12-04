@@ -8,7 +8,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
         posY            = 0.0; %miles
         velocity        = 0.0; %mph
         acceleration    = 3.0; %ft/s/s 2-20ft/s/s
-        % TODO remove deceleration?
         deceleration    = -1.5; %ft/s/s
         length          = 13.0/5280.0; %13 feet in miles.   make all cars same length for now
         
@@ -58,9 +57,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
     end
     
     methods
-        function pos = GetNewPos(obj, deltaTinSeconds, maxPos)
-            % TODO add maxPos handling
-            % TODO add acceleration handling
+        function pos = GetNewPos(obj, deltaTinSeconds)
             maxDelta = obj.targetRate *3600 / 5280 *deltaTinSeconds; %convert from ft/s/s to m/h/s
             obj.velocity = min(max( obj.targetVelocity,obj.velocity-maxDelta),obj.velocity+maxDelta) ;
             pos = obj.posY + deltaTinSeconds / 3600 * obj.velocity; %convert seconds to hours for math
