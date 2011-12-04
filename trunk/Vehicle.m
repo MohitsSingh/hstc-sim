@@ -98,6 +98,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
 
             % If we are at or beyond our destinationRamp, exit now.
             if (obj.posY >= obj.destinationRamp)
+                disp('***********EXITING');
                 % Exit by setting our lane to -1 and leaving.  On the next
                 % go around, the VM will not put us on the highway.
                 obj.lane = -1;
@@ -139,7 +140,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                         % as we want.
                         newPosThisLane = inFrontPos - obj.minNonCaravanDistance;
                         [posInNewLane, newLane] = ChangeLanes(obj, highway, highwayIndex, newPos);
-                        if (newPosThisLane < posInNewLane)
+                        if ((newPosThisLane < posInNewLane) && (newLane > 0))
                             % We are changing lanes.  This means that we can
                             % advance the distance returned
                             obj.lane = newLane;
@@ -154,9 +155,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
                             % Complain if we backup
                             assert (newPosThisLane >= obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f, newPosThisLane = %f, inFrontPos = %f',...
                                     obj.posY, newPos, obj.minNonCaravanDistance, newPosThisLane, inFrontPos);
-                            if (newPosThisLane <= obj.posY)
-                                fprintf(1, '!');
-                            end
                             obj.posY = newPosThisLane;
                             % Need to adjust current speed here?
                         end
@@ -225,8 +223,13 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 posInLane = posInLeftLane;
                 newLane = leftLane;
             else
-                posInLane = posInRightLane;
-                newLane = rightLane;
+                if(rightLane > 0)
+                    posInLane = posInRightLane;
+                    newLane = rightLane;
+                else
+                    posInLane = 0;
+                    newLane = 0;
+                end
             end
         end
         
