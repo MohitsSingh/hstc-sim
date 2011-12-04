@@ -26,6 +26,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         dragCoefficient = 0.4;
         wantsCaravan    = false;
         wantsOutOfCaravan    = false;
+        moveToMergeLane     = false;    %the caravan controller will tell us when to move
         caravanNumber   = 0;  %might be redundant...can lookup in caravan
         caravanPosition = 0;
         fuelEconomy     = 20.0; %mpg
