@@ -48,6 +48,26 @@ classdef CaravanController  <handle
         function [formCaravan, whichCars] = shouldIFormACaravan(obj,v)
             whichCars = [];
             formCaravan = false;
+            
+            vm = VehicleMgr.getInstance;
+            
+            numV = length(vm.currentVehicles);
+            for i = 1 : numV
+                currVeh = vm.currentVehicles(i);
+                
+                % ignore if already in a caravan, or me
+                if currVeh.caravanNumber > 0 || v.id == currVeh.id 
+                    continue;
+                else
+                    % TODO add some better criteria for similar
+                    % destinations?
+                    if abs(v.posY - currVeh.posY) <= 20 && ...
+                            abs(v.destination - currVeh.destination) <= 5
+                        whichCars = [whichCars currVeh];
+                        formCaravan = true;
+                    end
+                end
+            end
         end
         
         %create a new caravan object
