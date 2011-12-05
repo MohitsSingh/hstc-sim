@@ -9,7 +9,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         velocity        = 0.0; %mph
         acceleration    = 3.0; %ft/s/s 2-20ft/s/s
         deceleration    = -1.5; %ft/s/s
-        length          = 0.0;%13.0/5280.0; %13 feet in miles.   make all cars same length for now
+        length          = 13.0/5280.0; %13 feet in miles.   make all cars same length for now
         
 % http://physics.info/acceleration/        
 % Automotive Acceleration (g) 1g = 32ft/s/s
