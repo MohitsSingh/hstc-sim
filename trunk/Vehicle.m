@@ -9,7 +9,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         velocity        = 0.0; %mph
         acceleration    = 3.0; %ft/s/s 2-20ft/s/s
         deceleration    = -1.5; %ft/s/s
-        length          = 13.0/5280.0; %13 feet in miles.   make all cars same length for now
+        length          = 0.0;%13.0/5280.0; %13 feet in miles.   make all cars same length for now
         
 % http://physics.info/acceleration/        
 % Automotive Acceleration (g) 1g = 32ft/s/s
@@ -100,7 +100,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
 
             % If we are at or beyond our destinationRamp, exit now.
             if (obj.posY >= obj.destinationRamp)
-                disp('***********EXITING');
                 % Exit by setting our lane to -1 and leaving.  On the next
                 % go around, the VM will not put us on the highway.
                 obj.lane = -1;
@@ -121,7 +120,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
             else
                 % Now that we have the closest in our lane, see how far we can
                 % advance.
-                inFrontPos = highway(closest, 3) - 13.0/5280.0; %for now hardcode a car length TODO
+                inFrontPos = highway(closest, 3) - obj.length; %for now hardcode a car length TODO
                 
                 %if we are in a caravan, we can only move as far as the
                 %tailend of the car in front of us minus the caravan
@@ -136,8 +135,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     % We can advance the entire way
                     obj.posY = newPos;
                 else
-                    %only let cars in caravan automatically change lanes
-                    if obj.caravanNumber == 0 %dy default now, the # is 0 because of if/else structure
+                    %Don't let cars in caravan automatically change lanes
+                    if obj.caravanNumber == 0 
                         % See if we can change lanes and still advance as far
                         % as we want.
                         newPosThisLane = inFrontPos - obj.minNonCaravanDistance;
@@ -155,8 +154,17 @@ classdef Vehicle < hgsetget % subclass hgsetget
                                 newPosThisLane = 0;
                             end                    
                             % Complain if we backup
-                            assert (newPosThisLane >= obj.posY, 'Car did NOT advance [oldPos = %f, newPos = %f, minDistance = %f, newPosThisLane = %f, inFrontPos = %f',...
-                                    obj.posY, newPos, obj.minNonCaravanDistance, newPosThisLane, inFrontPos);
+                if (newPosThisLane <obj.posY)
+                    fprintf(1, 'posY: %f, inFrontPos: %f\n', obj.posY, inFrontPos);
+                    fprintf(1, 'OBJ in highway (index: %d, lane: %d, dist: %f)\n',...
+                            highway(highwayIndex, 1), highway(highwayIndex, 2), highway(highwayIndex, 3));
+                    fprintf(1, 'closest is: %d\n', closest);
+                    fprintf(1, 'closest in highway (index: %d, lane: %d, dist: %f)\n',...
+                            highway(closest, 1), highway(closest, 2), highway(closest, 3));
+                    fprintf(1, 'newLane: %d\n', newLane);
+                end
+                            assert (newPosThisLane >= obj.posY, 'Car did NOT advance [oldPos: %f, newPos: %f, minDistance: %f, newPosThisLane: %f, inFrontPos = %f(back), inFrontPos: %f(front)',...
+                                    obj.posY, newPos, obj.minNonCaravanDistance, newPosThisLane, inFrontPos, inFrontPos + obj.length);
                             obj.posY = newPosThisLane;
                             % Need to adjust current speed here?
                         end
@@ -244,7 +252,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         
         
         function obj = Enter(obj,deltaTinSeconds, highway, highwayIndex)
-            % Get the closest car in lane 1 and see if we can enter.
+           % Get the closest car in lane 1 and see if we can enter.
             entryPoint = obj.posY;
             newPos = GetNewPos(obj, deltaTinSeconds);
             closest = ClosestInLane (obj,1, highway, highwayIndex);
