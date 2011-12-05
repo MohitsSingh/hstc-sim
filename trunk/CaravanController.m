@@ -94,6 +94,7 @@ classdef CaravanController  <handle
             
             %remove car from list of cars wanting a caravan
             v.wantsCaravan      = false;
+            v.joiningCaravan = true;
             %todo...be smarter about moving the car over to the merge lane
             v.moveToMergeLane   = true; %tell the car to move over
         end
