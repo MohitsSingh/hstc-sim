@@ -64,22 +64,46 @@ classdef CaravanController  <handle
                     if abs(v.posY - currVeh.posY) <= 20 && ...
                             abs(v.destination - currVeh.destination) <= 5
                         whichCars = [whichCars currVeh];
+                        
+                        % Sort cars (sorted such that first in list has
+                        % greatest posY)
+                        [~,idx]=sort([whichCars.posY], 'descend');
+                        whichCars = whichCars(idx);
+                        
                         formCaravan = true;
                     end
                 end
             end
         end
         
-        %create a new caravan object
-        %tell car at the back of the new group to move into caravan lane
-        %Assign other cars to the caravan
-        function obj = CreateACaravan(obj)
+        function caravan = CreateACaravan(obj,whichCars)
+            % Create a new caravan object
+            caravan = Caravan.empty;
+            
+            % assign all cars to the Caravan
+            for i=1:length(whichCars)
+                 % tell car at the back of the new group to move into 
+                 % caravan lane first in the list should be farthest back 
+                 % (vehicles are put into list in ascending order)
+                if i==length(whichCars)
+                    whichCars(i).moveToCaravanLane = true;
+                end
+                
+               AssignCarToCaravan(obj,whichCars(i), caravan); 
+            end 
+            
+            AddCaravan(obj,caravan);
         end
         
 
         function obj = AddCaravan(obj,newCaravan)
-            %todo insert by position
+            newCaravan.id = length(obj.allCaravans)+1;
             obj.allCaravans(length(obj.allCaravans)+1) = newCaravan;
+            
+            % Sort caravans by position (change ascend to descend if
+            % desired)
+            [~,idx]=sort([obj.allCaravans.allVehicles(1).posY], 'ascend');
+            obj.allCaravans = obj.allCaravans(idx);
         end
         
         %add vehicle to list of cars and caravans to be tracked.  
