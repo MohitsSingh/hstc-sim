@@ -27,6 +27,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         wantsCaravan    = false;
         joiningCaravan  = false;
         wantsOutOfCaravan    = false;
+        moveToCaravanLane   = false;
         moveToMergeLane     = false;    %the caravan controller will tell us when to move
         caravanNumber   = 0;  %might be redundant...can lookup in caravan
         caravanPosition = 0;
