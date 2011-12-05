@@ -5,7 +5,17 @@ classdef CaravanController  <handle
     %todo handle only vehicles in my zone(so make me support zones)
     
     properties
-        assignedCars            ;
+        assignedCars            ; % a array  of structures
+                                  % .vehicle object
+                                  % .caravan
+                                  % .state  - waitFor15, spread caravan,
+                                  % insert car, restore caravan
+        waitFor15               = 1;
+        spreadCaravan           = 2;
+        waitForCarinPosition    = 3;
+        insertCar               = 4;
+        restoreCaravan          = 5;
+        
         allCaravans             = Caravan.empty;
         
         numAssignedCars         = 0;
@@ -87,16 +97,17 @@ classdef CaravanController  <handle
                  % (vehicles are put into list in ascending order)
                 if i==length(whichCars)
                     whichCars(i).moveToCaravanLane = true;
-                end
-                
+        end
+        
                AssignCarToCaravan(obj,whichCars(i), caravan); 
             end 
-            
+
             AddCaravan(obj,caravan);
         end
         
 
         function obj = AddCaravan(obj,newCaravan)
+            %todo insert in ordered list by destination
             newCaravan.id = length(obj.allCaravans)+1;
             obj.allCaravans(length(obj.allCaravans)+1) = newCaravan;
             
@@ -113,6 +124,7 @@ classdef CaravanController  <handle
             %add to the list
             obj.assignedCars(obj.numAssignedCars+1).vehicle = v;
             obj.assignedCars(obj.numAssignedCars+1).caravan = whichCaravan;
+            obj.assignedCars(obj.numAssignedCars+1).state   = obj.waitFor15;
             
             obj.numAssignedCars = obj.numAssignedCars+1;
             
@@ -152,9 +164,34 @@ classdef CaravanController  <handle
             %tell car when to insert
             %remove car from assigned list
             for i=1:obj.numAssignedCars
-                 if obj.assignedCars(i).caravan.position > obj.assignedCars(i).vehicle.posY 
-                     SimulationSetup.Pause = true;
-                 end
+                
+                %a simple statemachine is used for each caravan /car pair
+                %when the carvan is 15 seconds away, issue a caravan insert
+                %command
+                %when the caravan is along side the vehicle, tell the
+                %vehicle to move in
+                %when the vehcile is in position, restore speed of lead
+                %vehicles
+                if obj.assignedCars(i).state == obj.waitFor15 
+                    %if the caravan is 15 seconds away, tell the lead cars to
+                    %speedup
+                    timeToMeeting = (obj.assignedCars(i).vehicle.posY - obj.assignedCars(i).caravan.position) ...
+                                    / (obj.assignedCars(i).caravan.velocity - obj.assignedCars(i).vehicle.velocity);
+                    if timeToMeeting < 15/3600 %15seconds
+                        obj.assignedCars(i).caravan.InsertRequest(2);
+                        obj.assignedCars(i).state = obj.spreadCaravan;
+                    end
+
+                elseif obj.assignedCars(i).state == obj.spreadCaravan
+                    obj.assignedCars(i).state = obj.waitForCarinPosition;
+                elseif obj.assignedCars(i).state == obj.waitForCarinPosition
+                elseif obj.assignedCars(i).state == obj.insertCar
+                elseif obj.assignedCars(i).state == obj.restoreCaravan
+                end
+                    
+                if obj.assignedCars(i).caravan.position > obj.assignedCars(i).vehicle.posY 
+                 SimulationSetup.Pause = true;
+                end
             end
             
         end
