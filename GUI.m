@@ -177,6 +177,7 @@ function updateGUI()
     % Compile stats
     numInCaravan = sum([vehicles.caravanNumber] > 0);
     numToJoin = sum([vehicles.wantsCaravan]);
+    numJoining = sum([vehicles.joiningCaravan]);
     numNotInCaravan = sum([vehicles.caravanNumber] <= 0);
     avgVelocity = mean([vehicles.velocity]);
     avgEconomy = mean([vehicles.fuelEconomy]);
@@ -201,7 +202,8 @@ function updateGUI()
         end
     end
     
-    set(gh.numberValues,'String',[numInCaravan; numToJoin; numNotInCaravan]);
+    set(gh.numberValues,'String',[numInCaravan; numToJoin; ...
+        numJoining; numNotInCaravan]);
     set(gh.averageValues,'String',[avgVelocity; avgEconomy]);
     
     set(focusSelector, 'String', [vehicles.id]');
