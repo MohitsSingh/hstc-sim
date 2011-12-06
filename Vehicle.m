@@ -23,7 +23,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         
         destination     = 0;    %in miles.
         
-        dragCoefficient = 0.4;
+        dragArea        = 0.75;
         wantsCaravan    = false;
         joiningCaravan  = false;
         wantsOutOfCaravan    = false;
@@ -33,6 +33,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         caravanNumber   = 0;  %might be redundant...can lookup in caravan
         caravanPosition = 0;
         fuelEconomy     = 20.0; %mpg
+        baseFuelEconomy = 20.0; %mpg
         
         %john variables
         preferredSpeed  = 55;    %45, 55, 65 +-5mph gaussian
@@ -138,6 +139,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
             %If we don't have one, just advance to the calculated position.
             if (closest < 0)
                 obj.posY = newPos;
+                inFrontPos = -1; %for mpg calculation
             else
                
                     
@@ -208,6 +210,9 @@ classdef Vehicle < hgsetget % subclass hgsetget
             end
 %             obj.drv.Agent(obj);
 
+            % Calculate fuel economy
+            CalculateMPG(obj, inFrontPos);
+            
             % update drive time.
             obj.driveTime = obj.driveTime + deltaTinSeconds;
             % Save the distance travelled (just in case)
@@ -313,6 +318,46 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     end
                 end
             end
+        end
+        
+        function obj = CalculateMPG(obj, leadCarPos)
+            % http://www.omninerd.com/articles/Improve_MPG_The_Factors_Affecting_Fuel_Efficiency
+            
+            %http://en.wikipedia.org/wiki/Drag_power#Drag_at_high_velocity
+            %F = .5*pv^2CA
+            %F = force of drag (kg*m/s^2) = newtons
+            %p = density of fluid (1.29 for atmospheric air) (kg/m^3)
+            %v = speed of the object (m/s)
+            %C = drag coefficient
+            %A = reference area (m^2)
+            
+            % http://en.wikipedia.org/wiki/Automobile_drag_coefficient#Drag_area
+            % drag area = C * A (m^2)
+            
+            % 1 mph = 0.44704 meters / second
+            
+            trailingDistance = leadCarPos - obj.posY;
+            
+            slipStreamRegion = 4 * obj.length;
+            
+            if trailingDistance <= 0 || trailingDistance > slipStreamRegion
+                % nobody in front of me or too far away to care
+                density = 1.29;
+            else
+                % modify density as a ratio of trailingDistance
+                density = 1.29 - .65 * ...
+                    ((slipStreamRegion - trailingDistance) / slipStreamRegion);
+            end
+            
+            forceOfDrag=.5 * density * (obj.velocity * 0.44704) ^ 2 ...
+                * obj.dragArea;
+            
+            % TODO incorporate acceleration
+            % TODO incorporate velocity
+            % TODO calculate work
+            
+            % TODO calculate fuel economy based on work
+            obj.fuelEconomy = obj.baseFuelEconomy;
         end
         
     end

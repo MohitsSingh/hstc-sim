@@ -135,8 +135,9 @@ classdef TrafficGen
         v.destinationRamp = 10+(500-10) * rand();
         v.destination = v.destinationRamp;
         
-        % And a drag coeffcient between .25 and .45
-        v.dragCoefficient = .25+(.45-.25) * rand();
+        % And a drag area between 0.5 and 1.2
+        %http://en.wikipedia.org/wiki/Automobile_drag_coefficient#Drag_area
+        v.dragArea = 0.5+(1.2-0.5) * rand();
     end
    end
 end
