@@ -2,6 +2,8 @@ function KPP4(hoursForTest)
 % Function that runs the tests needed for KPP3
 % input is the simulated number of hours to run.
 % This will always use the same time step (.003 ~ 10 seconds)
+global guiHandle
+
 
 % First lets perform a test WITHOUT a caravan lane
 lanes = 5;
@@ -21,6 +23,11 @@ vm = VehicleMgr.getInstance(lanes);
 currentTime = 0;
 printOutTime = 10*60/deltaT;       % Print out a marker every simulated minute.
 printOutCount = 0;
+
+guiHandle = GUI;
+setappdata(guiHandle,'vm',vm);
+GUI('updateGUI');
+
 while (currentTime < hoursForTest)
     %First generate the vehicles for this time step.
     [tg, vehicles] = TimeStep(tg);
@@ -29,6 +36,9 @@ while (currentTime < hoursForTest)
     
     % Now have everyone advance.
     vm = TimeStep(vm, deltaT);
+    
+    setappdata(guiHandle,'vm',vm);
+    GUI('updateGUI');
     
     currentTime = currentTime + timeStep;
     printOutCount = printOutCount + 1;
