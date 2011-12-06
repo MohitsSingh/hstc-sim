@@ -88,12 +88,12 @@ classdef TrafficGen
                 maxIndex = size(obj.arrivalTimes, 2);
                 while ((i < maxIndex) && (obj.arrivalTimes(lane, i) < time))
                     % Currently we are only creating one vehicle.
-                    if (~addedOneThisLane)
+%                    if (~addedOneThisLane)
                         addedOneThisLane = true;
                         vId = vId + 1;
                         v = TrafficGen.NewVehicle(lane, vId, obj.caravanThreshold, obj.useCaravans);
                         vehicles = [vehicles v];
-                    end
+%                    end
                     i = i + 1;
                 end
                 obj.timeIndex(lane) = i;
@@ -112,9 +112,9 @@ classdef TrafficGen
         
         % For the velocity of the vehicle, we will use a normal distribution
         % and offset it based on the lane number.  The range will be +/- 10
-        % around a nominal speed.  The function to determin the speed is 45
+        % around a nominal speed.  The function to determin the speed is 55
         % + ((lane - 1) * 10)
-        nominalSpeed = 45 + ((lane - 1) * 10);
+        nominalSpeed = 55 + ((lane - 1) * 10);
         
         % Range is +/- 1 0 around the nominal value
         loSpeed = nominalSpeed - 10;
