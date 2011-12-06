@@ -23,6 +23,10 @@ classdef CaravanController  <handle
     end
     
     methods
+        function delete(obj)
+            CaravanController.getInstance(-1);
+        end 
+        
         %determine if there is a suitable caravan for the car
         %a suitable caravan is within 20 miles behind the current car, 
         %and has a destination at least
@@ -125,8 +129,6 @@ classdef CaravanController  <handle
             isIn = false;
             offset = 0.0;
             gapCenter = (gapFront+gapBack)/2;
-            fprintf('gapFront = %f, gapBack=%f, carFront = %f, carBack =%f', ...
-                gapFront, gapBack,carFront,carBack);
             if( gapFront > carFront) && ( carBack >gapBack)
                 isIn = true;
             else
@@ -285,13 +287,21 @@ classdef CaravanController  <handle
     end
     
     methods (Static)
-        function CaravanControllerObj = getInstance
+        function CaravanControllerObj = getInstance(args)
             mlock
             persistent localObj
             if isempty(localObj) || ~isvalid(localObj)
-                localObj = CaravanController;
+                if nargin == 0
+                    localObj = CaravanController;
+                else
+                    munlock
+                    clear
+                    localObj = CaravanController.empty;
+                    disp('Cleared CaravanController');
+                end
             end
             CaravanControllerObj = localObj;
+            
         end
     end
 end

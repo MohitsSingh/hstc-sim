@@ -9,7 +9,8 @@
 %
 % Ver   Date        Author      Description  
 
-munlock
+munlock VehicleMgr
+munlock CaravanController
 % Initialization
 close all   %close all previously opended figures
 clc
@@ -20,7 +21,7 @@ global CaravanControllerSetup
 global SimulationSetup
 global guiHandle
 
-cc = CaravanController;
+cc = CaravanController.getInstance;
 vm = VehicleMgr.getInstance(5);
 
 % Initialize variables

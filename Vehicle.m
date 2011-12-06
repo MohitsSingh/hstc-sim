@@ -377,7 +377,27 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % TODO incorporate acceleration
             % TODO incorporate velocity
             % TODO calculate work
+            powerOfDrag = forceOfDrag * obj.velocity;
             
+            %convert to horsepower, and figure out weight of gas consumed
+            %convert the weight to gallons
+            %divide gallons into miles travelled for mpg
+            
+            % http://www.valentintechnologies.com/fuel-consumption/default.asp
+            % In addition, the free-piston engine has inherently fewer 
+            % losses (friction, heat) and is significantly lighter, thus 
+            % reducing the weight of the car. Best current engines have a 
+            % specific fuel consumption of 0.310 lb/hp?h but operate at 
+            % an average of about 0.450 lb/hp?h. 
+            
+            % http://wiki.answers.com/Q/How_much_does_a_gallon_of_gasoline_weigh
+            % 6.073 pounds per US Gallon. 
+
+            % http://en.wikipedia.org/wiki/Gallon
+            % This gallon is defined as 231 cubic inches,[1] and is 
+            % equal to exactly 3.785411784 litres or about 0.13368 cubic 
+            % feet. This is the most common definition of a gallon 
+            % in the United States. 
             % TODO calculate fuel economy based on work
             obj.fuelEconomy = obj.baseFuelEconomy;
         end
