@@ -24,11 +24,25 @@ classdef VehicleMgr <handle
         
         % Function to add vehicles
         function obj = AddVehicles(obj, newVehicles)
+%             % First find out which vehicles are out of the area (distance
+%             % is negative) and find the furthest away any of them are.
+%             % This is done for each lane.
+%             furthestOut = zeros(obj.lanes, 1);
+%             for i=1:size(obj.highway, 1)
+%                 lane = obj.highway(i, 2);
+%                 if (obj.highway(i, 3) < furthestOut(lane))
+%                     furthestOut(lane) = obj.highway(i, 3);
+%                 end
+%             end
+            
             % Append to the all vehicles array
             obj.currentVehicles = [obj.currentVehicles newVehicles];
             % After adding the vehicles, rebuild the array that represents
             % the highway
             obj = BuildHighway(obj);
+            
+%             % Now, strt getting the ones at position 0 and update their
+%             % position to move back be
         end
 
         
@@ -78,7 +92,7 @@ classdef VehicleMgr <handle
             % Now for all those from currentVehicles that have exited,
             % move them to exitedVehicles.
             for v = length(obj.currentVehicles):-1:1
-                if (obj.currentVehicles(v).lane <= 0)
+                if (obj.currentVehicles(v).lane < 0)
                     obj.exitedVehicles = [obj.exitedVehicles obj.currentVehicles(v)];
                     obj.currentVehicles(v) = [];
                 end
@@ -95,6 +109,9 @@ classdef VehicleMgr <handle
             % Now re-build the highway.  It consists of the index, location
             % and lane for every vehicle
             for v = 1:length(obj.currentVehicles)
+                assert(obj.currentVehicles(v).lane > 0);
+                assert(obj.currentVehicles(v).lane <= obj.lanes, 'v.lane: %d, max lanes: %d\n', ...
+                       obj.currentVehicles(v).lane, obj.lanes);
                 obj.highway(v, 1:3) = [v, obj.currentVehicles(v).lane, obj.currentVehicles(v).posY];
             end
             
@@ -119,6 +136,10 @@ classdef VehicleMgr <handle
         function isLane = IsCaravanLane(lane)
             vm = VehicleMgr.getInstance;
             isLane = (vm.lanes == lane);
+        end
+        function isLane = IsValidLane(lane)
+            vm = VehicleMgr.getInstance;
+            isLane = (lane > 0) && (lane <= vm.lanes);
         end
         
         %Function to move vehicles around on the highway AFTER they have
