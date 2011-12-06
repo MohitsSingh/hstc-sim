@@ -32,10 +32,35 @@ classdef Caravan < hgsetget % subclass hgsetget
                 obj.allVehicles(obj.insertLocation).length - ...
                 obj.minVehicleSpacing;
 
-            gapBack = obj.allVehicles(obj.insertLocation).posY + ...
+            gapBack = obj.allVehicles(obj.insertLocation+1).posY + ...
                 obj.minVehicleSpacing;
         end
-          
+        
+        function midPoint = GetMidPoint(obj)
+            cvFront = obj.allVehicles(1).posY;
+
+            cvBack = obj.allVehicles(length(obj.allVehicles)).posY + ...
+                obj.allVehicles(length(obj.allVehicles)).length;
+            midPoint = (cvFront + cvBack)/2.0;
+        end          
+        function endPoint = GetEndPoint(obj)
+            endPoint = obj.allVehicles(length(obj.allVehicles)).posY + ...
+                obj.allVehicles(length(obj.allVehicles)).length;
+        end          
+
+        function insertionPoint = GetInsertionPoint(obj)
+            if obj.insertLocation == 0
+                insertionPoint = obj.allVehicles(1).posY;
+            else
+                gapFront = obj.allVehicles(obj.insertLocation).posY - ...
+                    obj.allVehicles(obj.insertLocation).length - ...
+                    obj.minVehicleSpacing;
+
+                gapBack = obj.allVehicles(obj.insertLocation+1).posY + ...
+                    obj.minVehicleSpacing;
+                insertionPoint = (gapFront + gapBack)/2.0;
+            end
+        end          
         
         %location = 1 HEAD
         %location = -1 TAIL
@@ -58,6 +83,14 @@ classdef Caravan < hgsetget % subclass hgsetget
                 obj.allVehicles(i).targetVelocity = obj.maxSpeed;
             end
         end
+
+        function obj = CloseRanks(obj,location)
+            % send a message to all cars to return to follow mode
+            for i = 1 : length(obj.allVehicles)
+                obj.allVehicles(i).insertMode = false;
+            end
+        end
+        
         
         %assumes that new veichle is added to end of list.   For now
         %this is used to initalize a caravan before the simulation starts

@@ -132,6 +132,7 @@ while ~simulationOver
     %check for exit conditions
     if strcmp(SimulationSetup.SimulationRunUnits, 'Seconds')
         if etime(clock, startTime) > SimulationSetup.SimulationRunLength
+            disp('Time Expired...');
             simulationOver = true;
         end
     else
