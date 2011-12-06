@@ -11,7 +11,9 @@ classdef Caravan < hgsetget % subclass hgsetget
         velocity                = 0.0;
         maxSize                 = 21;
         isAbleToTakeNewCars     = true;
-        allVehicles             = Vehicle.empty;;
+        insertLocation          = 0;
+        allVehicles             = Vehicle.empty;
+        
     end
     
     methods
@@ -20,15 +22,40 @@ classdef Caravan < hgsetget % subclass hgsetget
             obj.position = obj.allVehicles(1).posY;
             obj.velocity = obj.allVehicles(1).velocity;
         end
+
+        function sizeOfGap = GapSize(obj)
+            sizeOfGap = obj.allVehicles(obj.insertLocation).posY - ...
+                obj.allVehicles(obj.insertLocation+1).posY ;
+        end
+        function [gapFront,gapBack] = GetGap(obj)
+            gapFront = obj.allVehicles(obj.insertLocation).posY - ...
+                obj.allVehicles(obj.insertLocation).length - ...
+                obj.minVehicleSpacing;
+
+            gapBack = obj.allVehicles(obj.insertLocation).posY + ...
+                obj.minVehicleSpacing;
+        end
+          
         
         %location = 1 HEAD
         %location = -1 TAIL
         %location = 2..N this vehcile is the new one at that location
         function obj = InsertRequest(obj,location)
+            obj.insertLocation = location;
+            obj.allVehicles(location+1).insertMode = true;
             % send a message to all cars behind insertion point to
             % slow down 2 mph.   All cars in front of point  to speed up 2mph
-            for i = 1 : location
-                obj.allVehicles(i).targetVelocity = obj.allVehicles(i).targetVelocity + 2.0;
+            for i = 1 : obj.insertLocation
+                obj.allVehicles(i).targetVelocity   = obj.allVehicles(i).targetVelocity + 2.0;
+                obj.allVehicles(i).targetRate       = 0.2;
+            end
+        end
+        
+        function obj = ResumeSpeed(obj)
+            % send a message to all cars behind insertion point to
+            % slow down 2 mph.   All cars in front of point  to speed up 2mph
+            for i = 1 : obj.insertLocation
+                obj.allVehicles(i).targetVelocity = obj.maxSpeed;
             end
         end
         

@@ -29,6 +29,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         wantsOutOfCaravan    = false;
         moveToCaravanLane   = false;
         moveToMergeLane     = false;    %the caravan controller will tell us when to move
+        insertMode          = false;
         caravanNumber   = 0;  %might be redundant...can lookup in caravan
         caravanPosition = 0;
         fuelEconomy     = 20.0; %mpg
@@ -55,7 +56,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         
         %Minimum distance between cars in caravan
         minCaravanDistance = 0.0005681 % 3 feet in miles.
-                                
+                                        
     end
    
     methods
@@ -67,6 +68,12 @@ classdef Vehicle < hgsetget % subclass hgsetget
             end
             pos = obj.posY + deltaTinSeconds / 3600 * obj.velocity; %convert seconds to hours for math
         end
+        
+        function [front,back] = GetDims(obj)
+            front = obj.posY;
+
+            back = obj.posY - obj.length;
+        end        
         
         function closest = ClosestInLane(obj, lane, highway, startIndex)
             % Return the highway index of the closest vehicle in the lane
@@ -83,6 +90,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         end
         
         function obj = Advance(obj, deltaTinSeconds, highway, highwayIndex)
+            vm = VehicleMgr.getInstance;
             % Don't advance if we have exited.
             if (obj.lane < 0)
                 return;
@@ -108,6 +116,19 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 return;
             end
 
+            if obj.moveToMergeLane == true
+                % if we are not alread in the merger lane,
+                % ask vm if we can move to the left safely %TODO
+                mergeLane = vm.lanes -1 ;
+                if highway(highwayIndex,2) == mergeLane %merge lane?
+                    obj.moveToMergeLane = false;
+                else
+                    obj.lane = obj.lane + 1;
+                    VehicleMgr.LaneChange(highwayIndex);
+                end
+            end
+            
+            
             % Now search for cars forward from our position and see if we
             % can go there.
             % Once we find the next one in our lane, we need to see where
@@ -118,6 +139,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
             if (closest < 0)
                 obj.posY = newPos;
             else
+               
+                    
                 % Now that we have the closest in our lane, see how far we can
                 % advance.
                 inFrontPos = highway(closest, 3) - obj.length; %for now hardcode a car length TODO
@@ -126,10 +149,17 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 %tailend of the car in front of us minus the caravan
                 %spacing
                 if obj.caravanNumber ~= 0 
-                    obj.posY = min(newPos, inFrontPos - obj.minCaravanDistance);
-                    if newPos > inFrontPos - obj.minCaravanDistance
+                    %if we are the car that has something inserted in front
+                    %of it, we need to follow a little further behind
+                    if obj.insertMode == true
+                        followDistance = 27/5280.0;
+                    else
+                        followDistance = obj.minCaravanDistance;
+                    end
+                    obj.posY = min(newPos, inFrontPos - followDistance);
+                    if newPos > inFrontPos - followDistance
                         %todo should adjust velocity here.
-                        obj.velocity = obj.velocity * (inFrontPos - obj.minCaravanDistance) / newPos;
+                        obj.velocity = obj.velocity * (inFrontPos - followDistance) / newPos;
                     end
                 elseif (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     % We can advance the entire way

@@ -21,7 +21,7 @@ global SimulationSetup
 global guiHandle
 
 cc = CaravanController;
-vm = VehicleMgr.getInstance;
+vm = VehicleMgr.getInstance(5);
 
 % Initialize variables
 turnNumber = 1;
@@ -43,7 +43,7 @@ SimulationSetup.SimulationRunLength     = 180;
 SimulationSetup.SimulationRunUnits      = 'Seconds';
 SimulationSetup.focusId                 = 0;
 SimulationSetup.Pause                   = false;
-SimulationSetup.End                   = false;
+SimulationSetup.End                     = false;
 
 while ~startSimulation
     selection = menu('Main Menu',...
@@ -69,7 +69,8 @@ while ~startSimulation
             Kpp3_Generate;
             startSimulation = true;
         case 4
-            Kpp4_Generate;
+%             Kpp4_Generate;
+            KPP4(1);
             startSimulation = true;
         case 5
             Kpp5_Generate;
@@ -131,7 +132,7 @@ while ~simulationOver
     %check for exit conditions
     if strcmp(SimulationSetup.SimulationRunUnits, 'Seconds')
         if etime(clock, startTime) > SimulationSetup.SimulationRunLength
-            simulationOver = True;
+            simulationOver = true;
         end
     else
     end
@@ -142,7 +143,7 @@ while ~simulationOver
     GUI('updateGUI');
     
     elapsedTime=toc;
-    %pause(tinc-elapsedTime);
+%     pause(tinc-elapsedTime);
     
 end
 
