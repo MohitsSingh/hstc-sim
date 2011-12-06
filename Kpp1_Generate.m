@@ -50,6 +50,7 @@ target.posY         = 10+21;    %put it 10 miles ahead of caravan
 target.destination  = 31.4159;
 target.velocity     = 60.0;
 target.targetVelocity     = 60.0;
+target.lane         = 1;
 
 target.targetRate     = target.acceleration / 2.0;
 

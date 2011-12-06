@@ -97,7 +97,7 @@ classdef CaravanController  <handle
                  % (vehicles are put into list in ascending order)
                 if i==length(whichCars)
                     whichCars(i).moveToCaravanLane = true;
-        end
+                end
         
                AssignCarToCaravan(obj,whichCars(i), caravan); 
             end 
@@ -116,6 +116,20 @@ classdef CaravanController  <handle
             [~,idx]=sort([obj.allCaravans.allVehicles(1).posY], 'ascend');
             obj.allCaravans = obj.allCaravans(idx);
         end
+        
+        function [isIn, offset] = IsCarInGap( obj, whichCar )
+            [gapFront, gapBack] = obj.assignedCars(whichCar).caravan.GetGap();
+            [carFront,carBack ] = obj.assignedCars(whichCar).vehicle.GetDims();
+
+            isIn = false;
+            offset = 0.0;
+            if( gapFront > carFront) && ( carBack >gapBack)
+                isIn = true;
+            else
+                offset =  (carFront+carBack)/2 - (gapFront+gapBack)/2;
+            end
+        end
+            
         
         %add vehicle to list of cars and caravans to be tracked.  
         %keep track of which car and which caravan
@@ -151,6 +165,7 @@ classdef CaravanController  <handle
                         [formCaravan,whichCars] =obj.shouldIFormACaravan(v);
                         if formCaravan
                             CreateCaravan(whichCars);
+                            %todo set speed and following distance
                         end
                     end
                 end
@@ -179,18 +194,55 @@ classdef CaravanController  <handle
                                     / (obj.assignedCars(i).caravan.velocity - obj.assignedCars(i).vehicle.velocity);
                     if timeToMeeting < 15/3600 %15seconds
                         obj.assignedCars(i).caravan.InsertRequest(2);
+                        % tell target car to speed up
+                        obj.assignedCars(i).vehicle.targetVelocity =  ...
+                            obj.assignedCars(i).caravan.velocity - 2 ;
+                        obj.assignedCars(i).vehicle.targetRate = ...
+                            ((obj.assignedCars(i).caravan.position - obj.assignedCars(i).vehicle.posY) ...
+                            +(15*obj.assignedCars(i).caravan.velocity - 15*obj.assignedCars(i).vehicle.velocity)) / 122.5;
+                            
                         obj.assignedCars(i).state = obj.spreadCaravan;
                     end
 
                 elseif obj.assignedCars(i).state == obj.spreadCaravan
-                    obj.assignedCars(i).state = obj.waitForCarinPosition;
+                    if obj.assignedCars(i).caravan.GapSize() > 25.0 / 5280.0 ... 
+                        obj.assignedCars(i).state = obj.waitForCarinPosition;
+                        %tell the lead cars to go back to normal speed
+                        obj.assignedCars(i).caravan.ResumeSpeed();
+                    end
+    
                 elseif obj.assignedCars(i).state == obj.waitForCarinPosition
+                    [inGap, offset] = obj.IsCarInGap(i);
+                    if  inGap
+                        obj.assignedCars(i).state = obj.insertCar;
+                     else %adjust position/spped of target car
+                         if abs(offset) <  obj.assignedCars(i).vehicle.velocity * 2/3600%we are within seconds of the gap
+                             %where do we need to be next time step...use
+                             %somemagic to out us there
+                             nextCaravanPosition = ...
+                                obj.assignedCars(i).caravan.position ...
+                                    +obj.assignedCars(i).caravan.velocity * 2/3600;
+                             myTargetOffset = nextCaravanPosition - obj.assignedCars(i).vehicle.posY;
+                             obj.assignedCars(i).vehicle.velocity = myTargetOffset / (2/3600);
+                         end
+%                        if offset < 0.0 % we are behind
+%                            obj.assignedCars(i).vehicle.targetVelocity = ...
+%                                obj.assignedCars(i).vehicle.targetVelocity + 1.0;
+%                            %TODO figure out speed change
+%                        elseif offset > 0.0  %we are ahead
+%                            obj.assignedCars(i).vehicle.targetVelocity = ...
+%                                obj.assignedCars(i).vehicle.targetVelocity - 1.0;
+%                        end
+                    end
+                    
                 elseif obj.assignedCars(i).state == obj.insertCar
+                    SimulationSetup.Pause = true;
+
                 elseif obj.assignedCars(i).state == obj.restoreCaravan
                 end
                     
                 if obj.assignedCars(i).caravan.position > obj.assignedCars(i).vehicle.posY 
-                 SimulationSetup.Pause = true;
+                    %SimulationSetup.Pause = true;
                 end
             end
             
