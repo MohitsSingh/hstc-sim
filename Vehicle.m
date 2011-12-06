@@ -176,6 +176,9 @@ classdef Vehicle < hgsetget % subclass hgsetget
                         if ((newPosThisLane < posInNewLane) && (newLane > 0))
                             % We are changing lanes.  This means that we can
                             % advance the distance returned
+                            if (newLane > 3)
+                                fprintf(1, 'Car %d in lane %d\n', obj.id, newLane);
+                            end
                             obj.lane = newLane;
                             obj.posY = posInNewLane;
                             VehicleMgr.LaneChange(highwayIndex);
@@ -200,8 +203,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
 %                                     fprintf(1, 'Highway(%d) = (%d, %d, %f)\n', i, highway(i, 1), highway(i, 2), highway(i, 3));
 %                                 end
 %                             end
-                            assert (newPosThisLane >= obj.posY, 'Car did NOT advance [oldPos: %f, newPos: %f, minDistance: %f, newPosThisLane: %f, inFrontPos = %f(back), inFrontPos: %f(front)',...
-                                    obj.posY, newPos, obj.minNonCaravanDistance, newPosThisLane, inFrontPos, inFrontPos + obj.length);
+%                            assert (newPosThisLane >= obj.posY, 'Car did NOT advance [oldPos: %f, newPos: %f, minDistance: %f, newPosThisLane: %f, inFrontPos = %f(back), inFrontPos: %f(front)',...
+%                                    obj.posY, newPos, obj.minNonCaravanDistance, newPosThisLane, inFrontPos, inFrontPos + obj.length);
                             obj.posY = newPosThisLane;
                             % Need to adjust current speed here?
                         end
@@ -229,8 +232,9 @@ classdef Vehicle < hgsetget % subclass hgsetget
             posInRightLane = 0.0;
             % Lets look at moving left first.
             % First make sure we are not trying to move into the caravan lane.
-            if ~VehicleMgr.IsCaravanLane (leftLane) && VehicleMgr.IsValidLane(leftLane)
+            if ~VehicleMgr.IsCaravanLane (leftLane) && VehicleMgr.IsTravelLane(leftLane)
                 % Look in left lane and see how far we can advance there
+                
                 closest = ClosestInLane (obj, leftLane, highway, highwayIndex);  
                 if (closest > 0)
                     % There is a possibility we will move.  See how far we
@@ -246,11 +250,13 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     % Nothing in front in that lane.
                     posInLeftLane = newPos;
                 end
+            else
+                leftLane = 0;
             end
             
             % Now try moving to the right.
             % But only if there is a right lane.
-            if (VehicleMgr.IsValidLane(rightLane))
+            if (VehicleMgr.IsTravelLane(rightLane))
                 % Look in right lane and see how far we can advance there
                 closest = ClosestInLane (obj, rightLane, highway, highwayIndex);  
                 if (closest > 0)
@@ -267,6 +273,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     % Nothing in front in that lane.
                     posInRightLane = newPos;
                 end
+            else
+                rightLane = 0;
             end
             
             if (posInLeftLane >= posInRightLane)

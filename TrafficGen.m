@@ -30,7 +30,7 @@ classdef TrafficGen
             obj.previousTime = 0;
             obj.timeIndex = zeros(1, 0);
             obj.lanes = 0;
-            obj.travelLanes = 0;
+            obj.travelLanes = 0;    % If using caravans, this is lanes - 2.
             obj.lastVehicleId = 0;
             obj.useCaravans = true;
         end
@@ -47,10 +47,12 @@ classdef TrafficGen
             obj.lastVehicleId = 0;
             obj.useCaravans = useCaravans;
             if (useCaravans)
-                obj.travelLanes = lanes - 1;
+                obj.travelLanes = lanes - 2;
             else
                 obj.travelLanes = lanes;
             end
+            
+            fprintf(1, 'traffic gen travel lanes is %d\n', obj.travelLanes);
             
             % Spread the arrival rate over the number of lanes.
             meanArrival = 1/(arrivalRate/lanes);
@@ -96,6 +98,7 @@ classdef TrafficGen
 %                    end
                     i = i + 1;
                 end
+                
                 obj.timeIndex(lane) = i;
             end
             obj.previousTime = time;
@@ -131,8 +134,8 @@ classdef TrafficGen
             end
         end
         
-        % Now pick a desitination ramp anywhere from 10 to 500 miles.
-        v.destinationRamp = 10+(500-10) * rand();
+        % Now pick a desitination ramp anywhere from 10 to 250 miles.
+        v.destinationRamp = 10+(250-10) * rand();
         v.destination = v.destinationRamp;
         
         % And a drag area between 0.5 and 1.2
