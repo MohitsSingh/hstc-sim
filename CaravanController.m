@@ -270,7 +270,9 @@ classdef CaravanController  <handle
                         obj.assignedCars(i).vehicle.caravanNumber = ...
                             obj.assignedCars(i).caravan.id;
                         obj.assignedCars(i).vehicle.joiningCaravan = false;
+                        
                         %todo update caravan veihcile array
+                        %       remove assigned vehicle list item
                     end
                 end
                     
@@ -284,6 +286,7 @@ classdef CaravanController  <handle
     
     methods (Static)
         function CaravanControllerObj = getInstance
+            mlock
             persistent localObj
             if isempty(localObj) || ~isvalid(localObj)
                 localObj = CaravanController;

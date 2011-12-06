@@ -177,8 +177,9 @@ classdef VehicleMgr <handle
     end
     methods (Static)
         function managerObj = getInstance(numLanes)
+            mlock
             persistent localObj
-
+    
             if isempty(localObj) || ~isvalid(localObj)
                 if nargin == 0
                     numLanes = 4;
