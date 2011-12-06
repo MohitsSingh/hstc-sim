@@ -57,7 +57,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         minCaravanDistance = 0.0005681 % 3 feet in miles.
                                 
     end
-    
+   
     methods
         function pos = GetNewPos(obj, deltaTinSeconds)
             maxDelta = obj.targetRate *3600 / 5280 *deltaTinSeconds; %convert from ft/s/s to m/h/s
@@ -154,15 +154,20 @@ classdef Vehicle < hgsetget % subclass hgsetget
                                 newPosThisLane = 0;
                             end                    
                             % Complain if we backup
-                if (newPosThisLane <obj.posY)
-                    fprintf(1, 'posY: %f, inFrontPos: %f\n', obj.posY, inFrontPos);
-                    fprintf(1, 'OBJ in highway (index: %d, lane: %d, dist: %f)\n',...
-                            highway(highwayIndex, 1), highway(highwayIndex, 2), highway(highwayIndex, 3));
-                    fprintf(1, 'closest is: %d\n', closest);
-                    fprintf(1, 'closest in highway (index: %d, lane: %d, dist: %f)\n',...
-                            highway(closest, 1), highway(closest, 2), highway(closest, 3));
-                    fprintf(1, 'newLane: %d\n', newLane);
-                end
+%                             if (newPosThisLane <obj.posY)
+%                                 fprintf(1, 'posY: %f, inFrontPos: %f\n', obj.posY, inFrontPos);
+%                                 fprintf(1, 'highwayIndex is: %d\n', highwayIndex);
+%                                 fprintf(1, 'OBJ in highway (index: %d, lane: %d, dist: %f)\n',...
+%                                         highway(highwayIndex, 1), highway(highwayIndex, 2), highway(highwayIndex, 3));
+%                                 fprintf(1, 'closest is: %d\n', closest);
+%                                 fprintf(1, 'closest in highway (index: %d, lane: %d, dist: %f)\n',...
+%                                         highway(closest, 1), highway(closest, 2), highway(closest, 3));
+%                                 fprintf(1, 'newLane: %d\n', newLane);
+%                                 fprintf(1, 'posInNewLane: %f\n', posInNewLane);
+%                                 for i=highwayIndex-3:closest+3
+%                                     fprintf(1, 'Highway(%d) = (%d, %d, %f)\n', i, highway(i, 1), highway(i, 2), highway(i, 3));
+%                                 end
+%                             end
                             assert (newPosThisLane >= obj.posY, 'Car did NOT advance [oldPos: %f, newPos: %f, minDistance: %f, newPosThisLane: %f, inFrontPos = %f(back), inFrontPos: %f(front)',...
                                     obj.posY, newPos, obj.minNonCaravanDistance, newPosThisLane, inFrontPos, inFrontPos + obj.length);
                             obj.posY = newPosThisLane;
@@ -189,7 +194,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
             posInRightLane = 0.0;
             % Lets look at moving left first.
             % First make sure we are not trying to move into the caravan lane.
-            if ~VehicleMgr.IsCaravanLane (leftLane)
+            if ~VehicleMgr.IsCaravanLane (leftLane) && VehicleMgr.IsValidLane(leftLane)
                 % Look in left lane and see how far we can advance there
                 closest = ClosestInLane (obj, leftLane, highway, highwayIndex);  
                 if (closest > 0)
@@ -210,7 +215,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
             
             % Now try moving to the right.
             % But only if there is a right lane.
-            if (rightLane > 0)
+            if (VehicleMgr.IsValidLane(rightLane))
                 % Look in right lane and see how far we can advance there
                 closest = ClosestInLane (obj, rightLane, highway, highwayIndex);  
                 if (closest > 0)
@@ -241,6 +246,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     newLane = 0;
                 end
             end
+            
         end
         
         
