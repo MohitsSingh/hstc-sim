@@ -131,9 +131,12 @@ classdef TrafficGen
             end
         end
         
-        % Not pick a desitination ramp anywhere from 10 to 500 miles.
-        v.destinationRamp = 10+(500-5) * rand();
+        % Now pick a desitination ramp anywhere from 10 to 500 miles.
+        v.destinationRamp = 10+(500-10) * rand();
         v.destination = v.destinationRamp;
+        
+        % And a drag coeffcient between .25 and .45
+        v.dragCoefficient = .25+(.45-.25) * rand();
     end
    end
 end
