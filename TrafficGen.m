@@ -20,6 +20,14 @@ classdef TrafficGen
                             % - 1 (if having a caravan lane)
         lastVehicleId;      % Last ID used for a vehicle.
         useCaravans;        % True if we are using caravans, false if not.
+        
+        % Caravan info
+        lastCaravanId;      % Last ID used for a caravan.
+        caravanSpeed = 75;
+        minDistanceBetweenCaravans = .5;  % Half mile between caravans
+        minCaravanSize = 4;
+        maxCaravanSize = 30;
+        createdFirstCaravan = false;
     end
     
     methods
@@ -33,6 +41,8 @@ classdef TrafficGen
             obj.travelLanes = 0;    % If using caravans, this is lanes - 2.
             obj.lastVehicleId = 0;
             obj.useCaravans = true;
+            obj.lastCaravanId = 0;
+            obj.createdFirstCaravan = false;
         end
         
         % Method to initial for a run.
@@ -52,12 +62,10 @@ classdef TrafficGen
                 obj.travelLanes = lanes;
             end
             
-            fprintf(1, 'traffic gen travel lanes is %d\n', obj.travelLanes);
-            
             % Spread the arrival rate over the number of lanes.
             meanArrival = 1/(arrivalRate/lanes);
             % Now fill out arrival times for each of the lanes
-            for l = 1:obj.travelLanes
+            for l = 1:obj.lanes
                 lastArrive = 0;
                 i = 0;
                 while (lastArrive < lengthOfRun)
@@ -86,28 +94,85 @@ classdef TrafficGen
                 % the index previously saved.  While there are arrival
                 % times less than the current time, create a vehicle
                 i = obj.timeIndex(lane);
-                addedOneThisLane = false;
                 maxIndex = size(obj.arrivalTimes, 2);
                 while ((i < maxIndex) && (obj.arrivalTimes(lane, i) < time))
-                    % Currently we are only creating one vehicle.
-%                    if (~addedOneThisLane)
-                        addedOneThisLane = true;
-                        vId = vId + 1;
-                        v = TrafficGen.NewVehicle(lane, vId, obj.caravanThreshold, obj.useCaravans);
-                        vehicles = [vehicles v];
-%                    end
+                    vId = vId + 1;
+                    v = TrafficGen.NewVehicle(lane, vId, obj.caravanThreshold, obj.useCaravans);
+                    vehicles = [vehicles v];
                     i = i + 1;
                 end
                 
                 obj.timeIndex(lane) = i;
             end
-            obj.previousTime = time;
+            
+            % Now create a caravan, if needed.
+            if (obj.useCaravans) 
+                caravanLane = obj.lanes;
+                vm = VehicleMgr.getInstance;
+                % Find the closest caravan and see if it is far enough away
+                lastCaravanDistance = TrafficGen.ClosestInLane (caravanLane, vm);
+                if ~obj.createdFirstCaravan || (lastCaravanDistance >= obj.minDistanceBetweenCaravans)
+                    % Now look at the arrival times for this lane, starting at
+                    % the index previously saved.  While there are arrival
+                    % times less than the current time, create a vehicle
+                    createdCaravan = false;
+                    cId = obj.lastCaravanId;
+
+                    % No matter how many arrival times we have, we will only
+                    % create one caravan.
+                    i = obj.timeIndex(lane);
+                    maxIndex = size(obj.arrivalTimes, 2);
+                    posY = 0.0;
+                    while ((i < maxIndex) && obj.arrivalTimes(caravanLane, i) < time)
+                        if (~createdCaravan)
+                            createdCaravan = true;
+                            obj.createdFirstCaravan = true;
+                            cId = cId + 1;
+                            numCaravanCars = obj.minCaravanSize + (obj.maxCaravanSize - obj.minCaravanSize) * rand();
+                            for c = 1:numCaravanCars
+                                vId = vId + 1;
+                                v = TrafficGen.NewVehicle(caravanLane, vId + 1000000, 0, false);
+                                v.caravanNumber = cId;
+                                v.caravanPosition = c;
+                                v.posY = posY;
+                                v.velocity = obj.caravanSpeed;
+                                v.targetVelocity = v.velocity;
+                                vehicles = [vehicles v];
+                                
+                                % Calc the NEXT posY
+                                posY = posY - v.length - v.minCaravanDistance;
+                            end
+                        end
+                        i = i + 1;
+                    end
+
+                    obj.timeIndex(caravanLane) = i;
+                    obj.lastCaravanId = cId;
+                end
+            end
+            
             obj.lastVehicleId = vId;
+            obj.previousTime = time;
         end
-        
+            
     end
     
    methods(Static)
+    % Function to search the highway and find the closest to the
+    % BEGINNING of the highway.  It will return the distance down the
+    % highway of the vehcile.
+    function closest = ClosestInLane(lane, vm)
+        closest = 0;
+        % The closest will be the first one we find.
+        for i=1:size(vm.highway, 1)
+            if (vm.highway(i, 2) == lane)
+                closest = vm.highway(i, 3);
+                return;
+            end
+        end
+    end
+
+    % Function to create a new vehicle for the caravan.
     function v = NewVehicle (lane, id, caravanThreshold, useCaravans)
         v = Vehicle;
         v.lane = lane;
@@ -115,9 +180,9 @@ classdef TrafficGen
         
         % For the velocity of the vehicle, we will use a normal distribution
         % and offset it based on the lane number.  The range will be +/- 10
-        % around a nominal speed.  The function to determin the speed is 55
-        % + ((lane - 1) * 10)
-        nominalSpeed = 55 + ((lane - 1) * 10);
+        % around a nominal speed.  The function to determine the speed is
+        %  60 + ((lane - 1) * 10)
+        nominalSpeed = 60 + ((lane - 1) * 10);
         
         % Range is +/- 1 0 around the nominal value
         loSpeed = nominalSpeed - 10;

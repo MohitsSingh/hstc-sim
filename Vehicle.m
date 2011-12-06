@@ -151,8 +151,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 obj.posY = newPos;
                 inFrontPos = -1; %for mpg calculation
             else
-               
-                    
                 % Now that we have the closest in our lane, see how far we can
                 % advance.
                 inFrontPos = highway(closest, 3) - obj.length; %for now hardcode a car length TODO
