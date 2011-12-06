@@ -9,7 +9,7 @@
 %
 % Ver   Date        Author      Description  
 
-
+munlock
 % Initialization
 close all   %close all previously opended figures
 clc
