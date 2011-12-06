@@ -8,9 +8,12 @@ clear CaravanController;
 clear allCars;
 clear target;
 
+global cc
+global vm
+
 c = Caravan;
-cc = CaravanController.getInstance;
-vm = VehicleMgr.getInstance;
+% cc = CaravanController.getInstance;
+% vm = VehicleMgr.getInstance;
 
 %createa a caravan of ten cars
 for i = 1:10

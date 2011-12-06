@@ -9,6 +9,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         velocity        = 0.0; %mph
         acceleration    = 3.0; %ft/s/s 2-20ft/s/s
         deceleration    = -1.5; %ft/s/s
+        fps2mph         = 3600 / 5280;
         length          = 13.0/5280.0; %13 feet in miles.   make all cars same length for now
         
 % http://physics.info/acceleration/        
@@ -127,6 +128,15 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     obj.lane = obj.lane + 1;
                     VehicleMgr.LaneChange(highwayIndex);
                 end
+            elseif obj.moveToCaravanLane == true
+                %TODO account for lateral velocity 
+                caravanLane = vm.lanes  ;
+                if highway(highwayIndex,2) == caravanLane %caravan lane?
+                    obj.moveToCaravanLane = false;
+                else
+                    obj.lane = caravanLane;
+                    VehicleMgr.LaneChange(highwayIndex);
+                end
             end
             
             
@@ -150,7 +160,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 %if we are in a caravan, we can only move as far as the
                 %tailend of the car in front of us minus the caravan
                 %spacing
-                if obj.caravanNumber ~= 0 
+                if obj.caravanNumber ~= 0 || obj.joiningCaravan
                     %if we are the car that has something inserted in front
                     %of it, we need to follow a little further behind
                     if obj.insertMode == true
@@ -158,10 +168,14 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     else
                         followDistance = obj.minCaravanDistance;
                     end
+                    if obj.id == 11 && ~obj.joiningCaravan
+                        obj.id = 11; %for making a breakpoint after car joins caravan
+                    end
                     obj.posY = min(newPos, inFrontPos - followDistance);
                     if newPos > inFrontPos - followDistance
                         %todo should adjust velocity here.
                         obj.velocity = obj.velocity * (inFrontPos - followDistance) / newPos;
+                        %TODO Add closing the gap to follow distance
                     end
                 elseif (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     % We can advance the entire way

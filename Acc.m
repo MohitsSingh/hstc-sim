@@ -24,9 +24,13 @@ classdef Acc < hgsetget % subclass hgsetget
         function obj = SetOff(obj)
             obj.mode = 'follow';
         end
-        function obj = SetFollowMode(obj)
-            obj.mode = 'follow';
+        function obj = SetFollowDisatance(obj, distance)
+            obj.caravanFollowDistance = distance;
         end
+        
+        function obj = SetFollowDistance(obj)
+            obj.mode = 'follow';
+        end        
         function obj = SetAvoidMode(obj)
             obj.mode = 'avoid';
         end

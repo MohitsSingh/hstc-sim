@@ -12,9 +12,10 @@ classdef CaravanController  <handle
                                   % insert car, restore caravan
         waitFor15               = 1;
         spreadCaravan           = 2;
-        waitForCarinPosition    = 3;
-        insertCar               = 4;
-        restoreCaravan          = 5;
+        waitFor5                = 3;
+        waitForCarinPosition    = 4;
+        insertCar               = 5;
+        restoreCaravan          = 6;
         
         allCaravans             = Caravan.empty;
         
@@ -117,16 +118,20 @@ classdef CaravanController  <handle
             obj.allCaravans = obj.allCaravans(idx);
         end
         
-        function [isIn, offset] = IsCarInGap( obj, whichCar )
+        function [isIn, offset, gapCenter] = IsCarInGap( obj, whichCar )
             [gapFront, gapBack] = obj.assignedCars(whichCar).caravan.GetGap();
             [carFront,carBack ] = obj.assignedCars(whichCar).vehicle.GetDims();
 
             isIn = false;
             offset = 0.0;
+            gapCenter = (gapFront+gapBack)/2;
+            fprintf('gapFront = %f, gapBack=%f, carFront = %f, carBack =%f', ...
+                gapFront, gapBack,carFront,carBack);
             if( gapFront > carFront) && ( carBack >gapBack)
                 isIn = true;
             else
-                offset =  (carFront+carBack)/2 - (gapFront+gapBack)/2;
+                offset =  (carFront+carBack)/2 - gapCenter;
+                disp(offset*5280);
             end
         end
             
@@ -144,11 +149,15 @@ classdef CaravanController  <handle
             
             %remove car from list of cars wanting a caravan
             v.wantsCaravan      = false;
-            v.joiningCaravan = true;
-            %todo...be smarter about moving the car over to the merge lane
+            v.joiningCaravan    = true;
+            %todo...be smarter about when to move the car over to the merge lane
             v.moveToMergeLane   = true; %tell the car to move over
         end
-        
+        function acceleration = CalculateAccelerationFromIntersectionPoint(obj,c,v,t)
+            cv = c.allVehicles(c.insertLocation+1);
+            intCaravanPosition = cv.posY + cv.velocity * t;
+            acceleration = 2*(intCaravanPosition - v.posY - v.velocity*t) / t^2;
+        end
         function obj = Update(obj)
             global SimulationSetup
             vm = VehicleMgr.getInstance;
@@ -187,61 +196,85 @@ classdef CaravanController  <handle
                 %vehicle to move in
                 %when the vehcile is in position, restore speed of lead
                 %vehicles
-                if obj.assignedCars(i).state == obj.waitFor15 
+                if obj.assignedCars(i).state == obj.waitFor15
                     %if the caravan is 15 seconds away, tell the lead cars to
                     %speedup
-                    timeToMeeting = (obj.assignedCars(i).vehicle.posY - obj.assignedCars(i).caravan.position) ...
+                    timeToMeetingInHours = (obj.assignedCars(i).vehicle.posY - obj.assignedCars(i).caravan.GetEndPoint()) ...
                                     / (obj.assignedCars(i).caravan.velocity - obj.assignedCars(i).vehicle.velocity);
-                    if timeToMeeting < 15/3600 %15seconds
-                        obj.assignedCars(i).caravan.InsertRequest(2);
-                        % tell target car to speed up
+                    if timeToMeetingInHours < 15 / 3600 %15seconds
+                        
                         obj.assignedCars(i).vehicle.targetVelocity =  ...
-                            obj.assignedCars(i).caravan.velocity - 2 ;
-                        obj.assignedCars(i).vehicle.targetRate = ...
-                            ((obj.assignedCars(i).caravan.position - obj.assignedCars(i).vehicle.posY) ...
-                            +(15*obj.assignedCars(i).caravan.velocity - 15*obj.assignedCars(i).vehicle.velocity)) / 122.5;
-                            
+                             obj.assignedCars(i).caravan.velocity-1;
+                        obj.assignedCars(i).vehicle.targetRate =  ...
+                             (obj.assignedCars(i).caravan.velocity - ...
+                             obj.assignedCars(i).vehicle.velocity) / (15)  ;
+
+                        obj.assignedCars(i).caravan.InsertRequest(2);
+                         
+                        % tell target car to speed up
+% %                         obj.assignedCars(i).vehicle.targetVelocity =  ...
+% %                             obj.assignedCars(i).caravan.velocity-2  ;
+% %                         obj.assignedCars(i).vehicle.targetRate = ...
+% %                         obj.CalculateAccelerationFromIntersectionPoint( ...
+% %                             obj.assignedCars(i).caravan,...
+% %                             obj.assignedCars(i).vehicle,...
+% %                             15/3600);
+                        
+% %                         expectedVelocityAtInt = obj.assignedCars(i).vehicle.velocity + ...
+% %                             obj.assignedCars(i).vehicle.targetRate * 15/3600;
+% %                         disp(expectedVelocityAtInt)
                         obj.assignedCars(i).state = obj.spreadCaravan;
                     end
 
                 elseif obj.assignedCars(i).state == obj.spreadCaravan
                     if obj.assignedCars(i).caravan.GapSize() > 25.0 / 5280.0 ... 
-                        obj.assignedCars(i).state = obj.waitForCarinPosition;
+                        obj.assignedCars(i).state = obj.waitFor5;
                         %tell the lead cars to go back to normal speed
                         obj.assignedCars(i).caravan.ResumeSpeed();
                     end
-    
-                elseif obj.assignedCars(i).state == obj.waitForCarinPosition
-                    [inGap, offset] = obj.IsCarInGap(i);
-                    if  inGap
-                        obj.assignedCars(i).state = obj.insertCar;
-                     else %adjust position/spped of target car
-                         if abs(offset) <  obj.assignedCars(i).vehicle.velocity * 2/3600%we are within seconds of the gap
-                             %where do we need to be next time step...use
-                             %somemagic to out us there
-                             nextCaravanPosition = ...
-                                obj.assignedCars(i).caravan.position ...
-                                    +obj.assignedCars(i).caravan.velocity * 2/3600;
-                             myTargetOffset = nextCaravanPosition - obj.assignedCars(i).vehicle.posY;
-                             obj.assignedCars(i).vehicle.velocity = myTargetOffset / (2/3600);
-                         end
-%                        if offset < 0.0 % we are behind
-%                            obj.assignedCars(i).vehicle.targetVelocity = ...
-%                                obj.assignedCars(i).vehicle.targetVelocity + 1.0;
-%                            %TODO figure out speed change
-%                        elseif offset > 0.0  %we are ahead
-%                            obj.assignedCars(i).vehicle.targetVelocity = ...
-%                                obj.assignedCars(i).vehicle.targetVelocity - 1.0;
-%                        end
+                elseif obj.assignedCars(i).state == obj.waitFor5
+                    %if the caravan is 5 seconds away, tell the lead cars to
+                    %speedup
+                    timeToMeetingInHours = (obj.assignedCars(i).vehicle.posY - obj.assignedCars(i).caravan.GetInsertionPoint()) ...
+                                    / (obj.assignedCars(i).caravan.velocity - obj.assignedCars(i).vehicle.velocity);
+                    if timeToMeetingInHours < 5 / 3600 %5seconds
+                        % adjust target car speed 
+                        intPoint = obj.assignedCars(i).caravan.GetInsertionPoint()...
+                                + obj.assignedCars(i).caravan.velocity * 2/3600;
+                        [inGap, offset, gapCenter] = obj.IsCarInGap(i);
+                        assert(offset > -100 /5280);  %behind by 100 feet
+                        if  inGap
+                            obj.assignedCars(i).state = obj.insertCar;
+                        else
+                            %todo..this should acutally control
+                            %acceleration
+                            obj.assignedCars(i).vehicle.targetVelocity =  ...
+                                (intPoint - obj.assignedCars(i).vehicle.posY) / (2 / 3600);
+                            obj.assignedCars(i).vehicle.velocity =  ...
+                                obj.assignedCars(i).vehicle.targetVelocity;
+                        end
                     end
-                    
+                   
                 elseif obj.assignedCars(i).state == obj.insertCar
-                    SimulationSetup.Pause = true;
-
+                    %TODO undo instantaneous acceleration
+                    obj.assignedCars(i).vehicle.velocity = obj.assignedCars(i).caravan.velocity;
+                    obj.assignedCars(i).vehicle.targetVelocity = obj.assignedCars(i).vehicle.velocity;
+                    obj.assignedCars(i).vehicle.moveToCaravanLane = true;
+                    obj.assignedCars(i).state = obj.restoreCaravan;
+                    
                 elseif obj.assignedCars(i).state == obj.restoreCaravan
+                    if obj.assignedCars(i).vehicle.lane == vm.lanes; %in caravan lane?
+                        obj.assignedCars(i).caravan.CloseRanks();
+                        
+                        %update the caravan and vehicle flags
+                        obj.assignedCars(i).vehicle.caravanNumber = ...
+                            obj.assignedCars(i).caravan.id;
+                        obj.assignedCars(i).vehicle.joiningCaravan = false;
+                        %todo update caravan veihcile array
+                    end
                 end
                     
-                if obj.assignedCars(i).caravan.position > obj.assignedCars(i).vehicle.posY 
+                if obj.assignedCars(i).caravan.GetInsertionPoint > obj.assignedCars(i).vehicle.posY 
                     %SimulationSetup.Pause = true;
                 end
             end
