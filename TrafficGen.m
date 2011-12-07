@@ -204,7 +204,7 @@ classdef TrafficGen
         end
         
         % Now pick a desitination ramp anywhere from 20 to 250 miles.
-        v.destinationRamp = 20+(250-50) * rand();
+        v.destinationRamp = 20+(250-20) * rand();
         v.destination = v.destinationRamp;
         
         % And a drag area between 0.5 and 1.2
