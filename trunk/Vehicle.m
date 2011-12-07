@@ -36,6 +36,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
         caravanPosition         = 0;
         caravanSpeed            = 0;
         fuelEconomy             = 20.0; %mpg
+        avgMPG                  = 0.0;  % Running average of fuel economy
+        avgMPGCounter           = 0;
         weight                  = 1360.77; % kg (~3000 lbs)
         
         lastAdjustment          = 0;
@@ -306,8 +308,10 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % Calculate fuel economy
             CalculateMPG(obj, inFrontPos);
             
-            % update drive time.
+            % update our stats.
             obj.driveTime = obj.driveTime + deltaTinSeconds;
+            obj.avgMPG = (obj.avgMPG * obj.avgMPGCounter + obj.fuelEconomy)/(obj.avgMPGCounter + 1);
+            obj.avgMPGCounter = obj.avgMPGCounter + 1;
             % Save the distance travelled (just in case)
             obj.distanceTraveled = obj.posY;
         end
@@ -470,7 +474,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
             
             
             obj.fuelEconomy = mpgRequired;
-            
+
             
             %convert the weight to gallons
             %divide gallons into miles travelled for mpg
