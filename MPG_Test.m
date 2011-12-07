@@ -1,3 +1,6 @@
+%Can check against values from:
+%http://ecomodder.com/forum/tool-aero-rolling-resistance.php
+
 for i=5:5:120
    v = Vehicle;
    v.velocity = i;
