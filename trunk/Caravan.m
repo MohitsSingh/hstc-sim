@@ -11,7 +11,7 @@ classdef Caravan < hgsetget % subclass hgsetget
         velocity                = 0.0;
         maxSize                 = 21;
         isAbleToTakeNewCars     = true;
-        insertLocation          = 0;
+        gapLocation             = 0;
         allVehicles             = Vehicle.empty;
         
     end
@@ -24,15 +24,15 @@ classdef Caravan < hgsetget % subclass hgsetget
         end
 
         function sizeOfGap = GapSize(obj)
-            sizeOfGap = obj.allVehicles(obj.insertLocation).posY - ...
-                obj.allVehicles(obj.insertLocation+1).posY ;
+            sizeOfGap = obj.allVehicles(obj.gapLocation).posY - ...
+                obj.allVehicles(obj.gapLocation+1).posY ;
         end
         function [gapFront,gapBack] = GetGap(obj)
-            gapFront = obj.allVehicles(obj.insertLocation).posY - ...
-                obj.allVehicles(obj.insertLocation).length - ...
+            gapFront = obj.allVehicles(obj.gapLocation).posY - ...
+                obj.allVehicles(obj.gapLocation).length - ...
                 obj.minVehicleSpacing;
 
-            gapBack = obj.allVehicles(obj.insertLocation+1).posY + ...
+            gapBack = obj.allVehicles(obj.gapLocation+1).posY + ...
                 obj.minVehicleSpacing;
         end
         
@@ -49,14 +49,14 @@ classdef Caravan < hgsetget % subclass hgsetget
         end          
 
         function insertionPoint = GetInsertionPoint(obj)
-            if obj.insertLocation == 0
+            if obj.gapLocation == 0
                 insertionPoint = obj.allVehicles(1).posY;
             else
-                gapFront = obj.allVehicles(obj.insertLocation).posY - ...
-                    obj.allVehicles(obj.insertLocation).length - ...
+                gapFront = obj.allVehicles(obj.gapLocation).posY - ...
+                    obj.allVehicles(obj.gapLocation).length - ...
                     obj.minVehicleSpacing;
 
-                gapBack = obj.allVehicles(obj.insertLocation+1).posY + ...
+                gapBack = obj.allVehicles(obj.gapLocation+1).posY + ...
                     obj.minVehicleSpacing;
                 insertionPoint = (gapFront + gapBack)/2.0;
             end
@@ -66,32 +66,36 @@ classdef Caravan < hgsetget % subclass hgsetget
         %location = -1 TAIL
         %location = 2..N this vehcile is the new one at that location
         function obj = InsertRequest(obj,location)
-            obj.insertLocation = location;
+            obj.gapLocation = location;
             obj.allVehicles(location+1).gapMode = true;
             % send a message to all cars behind insertion point to
             % slow down 2 mph.   All cars in front of point  to speed up 2mph
-            for i = 1 : obj.insertLocation
+            for i = 1 : obj.gapLocation
                 obj.allVehicles(i).targetVelocity   = obj.allVehicles(i).targetVelocity + 2.0;
                 obj.allVehicles(i).targetRate       = 0.2;
             end
         end
 
         function obj = ExtractRequest(obj,vid)
-            
+            % |V|V|V|V|V|E|V|V|V|V|
+            extractLocation = -1;
             for i=1:length(obj.allVehicles)
                 if obj.allVehicles(i).id == vid
-                    extractLocation = i;
+                    extractLocation = i-1;
+                    obj.gapLocation = extractLocation;
                     break;
                 end
             end
-
-            %TODO what to do if vehicle is head or tail
-            obj.allVehicles(extractLocation+1).gapMode = true;
-            % send a message to all cars behind insertion point to
-            % slow down 2 mph.   All cars in front of point  to speed up 2mph
-            for i = 1 : extractLocation
-                obj.allVehicles(i).targetVelocity   = obj.allVehicles(i).targetVelocity + 2.0;
-                obj.allVehicles(i).targetRate       = 0.2;
+            if extractLocation ~= -1
+                %TODO what to do if vehicle is head or tail
+                obj.allVehicles(extractLocation+1).gapMode = true;
+                obj.allVehicles(extractLocation+2).gapMode = true;
+                % send a message to all cars behind insertion point to
+                % slow down 2 mph.   All cars in front of point  to speed up 2mph
+                for i = 1 : extractLocation
+                    obj.allVehicles(i).targetVelocity   = obj.allVehicles(i).targetVelocity + 2.0;
+                    obj.allVehicles(i).targetRate       = 0.2;
+                end
             end
         end
         
@@ -99,7 +103,7 @@ classdef Caravan < hgsetget % subclass hgsetget
         function obj = ResumeSpeed(obj)
             % send a message to all cars behind insertion point to
             % slow down 2 mph.   All cars in front of point  to speed up 2mph
-            for i = 1 : obj.insertLocation
+            for i = 1 : obj.gapLocation
                 obj.allVehicles(i).targetVelocity = obj.maxSpeed;
             end
         end

@@ -27,15 +27,18 @@ classdef Vehicle < hgsetget % subclass hgsetget
         dragArea                = 0.75;
         wantsCaravan            = false;
         joiningCaravan          = false;
+        leavingCaravan          = false;
         wantsOutOfCaravan       = false;
         moveToCaravanLane       = false;
         moveToMergeLane         = false;    %the caravan controller will tell us when to move
-        gapMode              = false;
+        gapMode                 = false;
         caravanNumber           = 0;  %might be redundant...can lookup in caravan
         caravanPosition         = 0;
+        caravanSpeed            = 0;
         fuelEconomy             = 20.0; %mpg
         weight                  = 1360.77; % kg (~3000 lbs)
         
+        lastAdjustment          = 0;
         %john variables
         preferredSpeed          = 55;    %45, 55, 65 +-5mph gaussian
                                         %randomize for 1/2/3
@@ -125,16 +128,26 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 if highway(highwayIndex,2) == mergeLane %merge lane?
                     obj.moveToMergeLane = false;
                 else
-                    obj.lane = obj.lane + 1;
+                    if highway(highwayIndex,2) > mergeLane
+                        obj.lane = obj.lane - 1;
+                        newPos = obj.posY; %move only laterally this turn
+                        %TODO bug...move doesn't get updated into highway
+                    else
+                        obj.lane = obj.lane + 1;
+                    end
                     VehicleMgr.LaneChange(highwayIndex);
                 end
             elseif obj.moveToCaravanLane == true
                 %TODO account for lateral velocity 
                 caravanLane = vm.lanes  ;
+
                 if highway(highwayIndex,2) == caravanLane %caravan lane?
                     obj.moveToCaravanLane = false;
                 else
                     obj.lane = caravanLane;
+                    obj.posY = obj.caravanPosition ;
+                    newPos = obj.posY;
+                    highway(highwayIndex,3) = obj.posY;
                     VehicleMgr.LaneChange(highwayIndex);
                 end
             end
@@ -162,19 +175,84 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     %if we are the car that has something inserted in front
                     %of it, we need to follow a little further behind
                     if obj.gapMode == true
-                        followDistance = 27/5280.0;
+%                         followDistance = 27/5280.0; %TODO
+                        followDistance = obj.minCaravanDistance;
                     else
                         followDistance = obj.minCaravanDistance;
                     end
-                    if obj.id == 11 && ~obj.joiningCaravan
-                        obj.id = 11; %for making a breakpoint after car joins caravan
+                    
+                    % We are in follow mode, so we can't get too close
+                    % but we do have a little slack on being a little too 
+                    % far away (twice follow distance)
+                    obj.posY        = newPos;
+                    distanceBehind  = inFrontPos - newPos;
+                    closestAllowed  = followDistance;
+                    farthestAllowed = 2* followDistance;
+                    if obj.gapMode == true || obj.joiningCaravan
+                        farthestAllowed = 27/5280.0; %TODO
                     end
-                    obj.posY = min(newPos, inFrontPos - followDistance);
-                    if newPos > inFrontPos - followDistance
-                        %todo should adjust velocity here.
-                        obj.velocity = obj.velocity * (inFrontPos - followDistance) / newPos;
-                        %TODO Add closing the gap to follow distance
+
+                    error           = followDistance - distanceBehind ; 
+                    deltaTinHours   = deltaTinSeconds /3600.0;
+                    
+                    %Distance travelled would have been V0*t,
+                    %but ifwe are either too close or to far,
+                    %we need to adjust our speed to account for the error
+                    %So instead of going V0*t distance, we want to go
+                    %that distance offset by the error.  Use
+                    %V1*t = V0*t + error to solve for V1
+                    %V1 = (V0*t + error) / t
+                    %Then underdamp the response by using only 10% of that
+                    %change
+                    
+                    if distanceBehind < closestAllowed
+                        %predict new velocity
+                        adjustment = (( (obj.velocity*deltaTinHours) - error) / deltaTinHours ) - obj.velocity ;
+                        adjustment = adjustment * 0.10; % only take 10% of adjustment
+                        if obj.lastAdjustment ~= 0
+                            %if the sign is the same then we are good, let
+                            %it ride, else zero it
+                            if ( (adjustment > 0) && (obj.lastAdjustment > 0) ...
+                               ||(adjustment < 0) && (obj.lastAdjustment < 0))
+                           %let the previous adjust ride
+                            else
+                                obj.lastAdjustment = 0; %sign changed
+                            end
+                        else
+                            obj.targetVelocity = obj.targetVelocity + adjustment;
+                            obj.lastAdjustment = adjustment;
+                        end
+                    elseif distanceBehind > farthestAllowed
+                        %predict new velocity
+                        adjustment = (( (obj.velocity*deltaTinHours) - error) / deltaTinHours ) - obj.velocity ;
+                        adjustment = adjustment * 0.90; % only take 10% of adjustment
+                        if obj.lastAdjustment ~= 0
+                            %if the sign is the same then we are good, let
+                            %it ride, else zero it
+                            if ( (adjustment > 0) && (obj.lastAdjustment > 0) ...
+                               ||(adjustment < 0) && (obj.lastAdjustment < 0))
+                           %let the previous adjust ride
+                            else
+                                obj.lastAdjustment = 0; %sign changed
+                            end
+                        else
+                            obj.targetVelocity = obj.targetVelocity + adjustment;
+                            obj.lastAdjustment = adjustment;
+                        end
+                    else
+                        %velocity is cool, we are in the band
+                        %restore velocity to previous unadjusted value
+                        if obj.lastAdjustment ~= 0
+                            obj.targetVelocity  = obj.targetVelocity-obj.lastAdjustment;
+                            obj.lastAdjustment = 0;
+                        end
                     end
+% %                     obj.posY = min(newPos, inFrontPos - followDistance);
+% %                     if newPos > inFrontPos - followDistance
+% %                         %todo should adjust velocity here.
+% %                         obj.velocity = obj.velocity * (inFrontPos - followDistance) / newPos;
+% %                         %TODO Add closing the gap to follow distance
+% %                     end
                 elseif (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     % We can advance the entire way
                     obj.posY = newPos;

@@ -17,11 +17,12 @@ vm = VehicleMgr.getInstance;
 
 %createa a caravan of ten cars
 for i = 1:10
-    allCars(i) = Vehicle;
-    allCars(i).id = i;
-    allCars(i).velocity = c.maxSpeed;
-    allCars(i).targetVelocity     = c.maxSpeed;
-    allCars(i).targetRate     = allCars(i).acceleration / 2.0;
+    allCars(i)                  = Vehicle;
+    allCars(i).id               = i;
+    allCars(i).velocity         = c.maxSpeed;
+    allCars(i).targetVelocity   = c.maxSpeed;
+    allCars(i).caravanSpeed     = c.maxSpeed;
+    allCars(i).targetRate       = allCars(i).acceleration / 2.0;
     %space cars out
     if i == 1
         allCars(i).posY = 10.0; %starting location        

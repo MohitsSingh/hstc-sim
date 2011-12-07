@@ -198,6 +198,8 @@ function updateGUI()
             % todo: add more options
             if v.wantsCaravan
                 set(r, 'FaceColor','blue');
+            elseif v.leavingCaravan % order of check is important here,bcuz caravan# is also true
+                set(r, 'FaceColor','red');                
             elseif v.caravanNumber > 0 % In caravan
                 set(r, 'FaceColor','green');
             else
