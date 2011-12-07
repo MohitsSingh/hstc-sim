@@ -179,10 +179,12 @@ function updateGUI()
     numToJoin = sum([vehicles.wantsCaravan]);
     numJoining = sum([vehicles.joiningCaravan]);
     numNotInCaravan = sum([vehicles.caravanNumber] <= 0);
-    avgVelocity = mean([vehicles.velocity]);
+%     avgVelocity = mean([vehicles.velocity]);
 %     avgEconomy = mean([vehicles.fuelEconomy]);
-    caravanMpg = mean(nonzeros(([vm.currentVehicles.caravanNumber] > 0) .* [vm.currentVehicles.fuelEconomy]));
-    nonCaravanMpg = mean(nonzeros(([vm.currentVehicles.caravanNumber] <= 0) .* [vm.currentVehicles.fuelEconomy]));
+    caravanVelocity = mean(nonzeros(([vehicles.caravanNumber] > 0) .* [vehicles.velocity]));
+    nonCaravanVelocity = mean(nonzeros(([vehicles.caravanNumber] <= 0) .* [vehicles.velocity]));
+    caravanMpg = mean(nonzeros(([vehicles.caravanNumber] > 0) .* [vehicles.fuelEconomy]));
+    nonCaravanMpg = mean(nonzeros(([vehicles.caravanNumber] <= 0) .* [vehicles.fuelEconomy]));
     
     % Plot rectangles and compile statistics for vehicles
     for i=1:length(vehicles)
@@ -206,7 +208,10 @@ function updateGUI()
     
     set(gh.numberValues,'String',[numInCaravan; numToJoin; ...
         numJoining; numNotInCaravan]);
-    set(gh.averageValues,'String',[avgVelocity; nonCaravanMpg; caravanMpg]);
+    set(gh.averageValues,'String',[max(0,nonCaravanVelocity); ...
+        max(0,caravanVelocity); ...
+        max(0,nonCaravanMpg); ...
+        max(0,caravanMpg)]);
     
     set(focusSelector, 'String', [vehicles.id]');
     

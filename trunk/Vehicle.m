@@ -34,7 +34,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         caravanNumber           = 0;  %might be redundant...can lookup in caravan
         caravanPosition         = 0;
         fuelEconomy             = 20.0; %mpg
-        baseFuelEconomy         = 20.0; %mpg
+        weight                  = 1360.77; % kg (~3000 lbs)
         
         %john variables
         preferredSpeed          = 55;    %45, 55, 65 +-5mph gaussian
@@ -372,10 +372,12 @@ classdef Vehicle < hgsetget % subclass hgsetget
             forceOfDrag=.5 * density * (obj.velocity * 0.44704) ^ 2 ...
                 * obj.dragArea;
             
-            % TODO incorporate acceleration
-            % TODO incorporate velocity
-            % TODO calculate work
             powerOfDrag = forceOfDrag * (obj.velocity * 0.44704); % watts
+            
+            % Rolling resistance formula: Crr * WeightKG * Gravitational acceleration
+            % Crr = coefficient of rolling resistance ~= .01 for a car
+            
+            rollingResistance = obj.weight * .01 * 9.8 * (obj.velocity * 0.44704); % watts
             
             %convert to horsepower, and figure out weight of gas consumed
             % 1 hp = 746 W = 746 (kg·m/s2)·(m/s)
@@ -385,7 +387,8 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % Fuel energy density (Wh/US gal.): 33557 
             % Engine efficiency: .22 
             % Drivetrain efficiency: .95 
-            mpgRequired = obj.velocity * 33557 * .22 * .95 / powerOfDrag;
+            mpgRequired = obj.velocity * 33557 * .22 * .95 / ...
+                (powerOfDrag + rollingResistance);
             
             
             obj.fuelEconomy = mpgRequired;
@@ -418,7 +421,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % equal to exactly 3.785411784 litres or about 0.13368 cubic 
             % feet. This is the most common definition of a gallon 
             % in the United States. 
-            % TODO calculate fuel economy based on work
         end
         
     end
