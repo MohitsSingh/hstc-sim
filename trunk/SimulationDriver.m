@@ -45,6 +45,10 @@ SimulationSetup.Pause                   = false;
 SimulationSetup.End                     = false;
 SimulationSetup.ShowGUI                 = true;
 
+SimParams.genTraffic                    = false;
+SimParams.numLanes                      = 5;
+SimParams.trafficRate                   = 100;
+
 
 while ~startSimulation
     selection = menu('Main Menu',...
@@ -78,14 +82,30 @@ while ~startSimulation
             SimulationSetup.SimTimeStep = 0.100;
             startSimulation             = true;
             SimulationSetup.focusId     = 4;
-            SimulationSetup.ShowGUI     = false;
+            SimulationSetup.ShowGUI     = true;
+            vm = VehicleMgr.getInstance(SimParams.numLanes);
         case 5
             startSimulation             = true;
+            SimParams.genTraffic = true;
         case 6  
             startSimulation             = true;
             SimulationSetup.ShowGUI     = false;
+            SimParams.genTraffic = true;
         case 7
-            EditSimulationParameters;
+%             EditSimulationParameters;
+            prompt= {'Number of lanes:' ...
+                'Traffic Arrival Rate (vehicles/hr/lane):' ...
+                'Simulation Run Length (s):' ...
+                'Simulation Time Step (s):'};
+            answer = inputdlg(prompt, 'Edit Simulation Parameters');
+            SimParams.numLanes = str2num(answer{1});
+            SimParams.trafficRate = str2num(answer{2});
+            SimulationSetup.SimulationRunLength = str2num(answer{3});
+            SimulationSetup.SimTimeStep = str2num(answer{4});
+            
+            SimParams.genTraffic = true;
+            
+            vm = VehicleMgr.getInstance(SimParams.numLanes);
         case 8
             close all
             return
@@ -95,6 +115,12 @@ end
 close all;
 
 %do some setups
+
+if SimParams.genTraffic
+    tg = TrafficGen;
+    tg = InitTraffic (tg, SimParams.numLanes, SimParams.trafficRate, ...
+        100, SimulationSetup.SimTimeStep, true);
+end
 
 simulationOver = false;
 
@@ -133,6 +159,11 @@ while ~simulationOver
             GUI('updateGUI');
         end
         continue;
+    end
+    
+    if SimParams.genTraffic
+        [tg, newVehicles] = TimeStep(tg);
+        vm = AddVehicles(vm, newVehicles);
     end
         
     vm.TimeStep(tinc);

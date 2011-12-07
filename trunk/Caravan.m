@@ -18,8 +18,13 @@ classdef Caravan < hgsetget % subclass hgsetget
     methods
         
         function obj = Update(obj)
-            obj.position = obj.allVehicles(1).posY;
-            obj.velocity = obj.allVehicles(1).velocity;
+%             myObj = obj
+%             vehLen = length(obj.allVehicles)
+            if ~isempty(obj.allVehicles)
+                leadVeh = obj.allVehicles(1);
+                obj.position = leadVeh.posY;
+                obj.velocity = leadVeh.velocity;
+            end
         end
         
         function sizeOfGap = GapSize(obj)
@@ -141,7 +146,7 @@ classdef Caravan < hgsetget % subclass hgsetget
             %posX = myposX, posY > my Posy
             numCars = length(obj.allVehicles);
             numCars = numCars + 1 ; 
-            obj.allVehicles(numCars) = v;
+            obj.allVehicles = [obj.allVehicles v];
           
             
             %update position and destination 

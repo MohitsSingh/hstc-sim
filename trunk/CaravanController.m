@@ -98,9 +98,9 @@ classdef CaravanController  <handle
             end
         end
         
-        function caravan = CreateACaravan(obj,whichCars)
+        function caravan = CreateCaravan(obj,whichCars)
             % Create a new caravan object
-            caravan = Caravan.empty;
+            caravan = Caravan;
             
             % assign all cars to the Caravan
             for i=1:length(whichCars)
@@ -111,10 +111,10 @@ classdef CaravanController  <handle
                     whichCars(i).moveToCaravanLane = true;
                 end
         
-               AssignCarToCaravan(obj,whichCars(i), caravan); 
+               obj.AssignCarToCaravan(whichCars(i), caravan); 
             end 
 
-            AddCaravan(obj,caravan);
+            obj.AddCaravan(caravan);
         end
         
 
@@ -125,7 +125,7 @@ classdef CaravanController  <handle
             
             % Sort caravans by position (change ascend to descend if
             % desired)
-            [~,idx]=sort([obj.allCaravans.allVehicles(1).posY], 'ascend');
+            [~,idx]=sort([obj.allCaravans.position], 'ascend');
             obj.allCaravans = obj.allCaravans(idx);
         end
         
@@ -162,6 +162,7 @@ classdef CaravanController  <handle
             v.joiningCaravan    = true;
             %todo...be smarter about when to move the car over to the merge lane
             v.moveToMergeLane   = true; %tell the car to move over
+%             whichCaravan.AddToVehicleList(v);
         end
         
         %add vehicle to list of cars and caravans to be tracked.  
@@ -216,7 +217,7 @@ classdef CaravanController  <handle
                     else
                         [formCaravan,whichCars] =obj.shouldIFormACaravan(v);
                         if formCaravan
-                            CreateCaravan(whichCars);
+                            obj.CreateCaravan(whichCars);
                             %todo set speed and following distance
                         end
                     end
@@ -226,7 +227,10 @@ classdef CaravanController  <handle
             end
             
             %update the caravan position and velcoity information
-            obj.allCaravans.Update();
+            for i=1:length(obj.allCaravans)
+                tempC = obj.allCaravans(i);
+                tempC.Update();
+            end
             
             %now work on getting cars to their caravan
             %tell the car when to move to caravan merge lane
@@ -261,7 +265,7 @@ classdef CaravanController  <handle
                     end
 
                 elseif obj.assignedCars(i).state == obj.spreadCaravan
-                    if obj.assignedCars(i).caravan.GapSize() > 25.0 / 5280.0 ... 
+                    if obj.assignedCars(i).caravan.GapSize() > 25.0 / 5280.0 
                         obj.assignedCars(i).state = obj.waitFor5;
                         %tell the lead cars to go back to normal speed
                         obj.assignedCars(i).caravan.ResumeSpeed();
