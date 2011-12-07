@@ -19,6 +19,7 @@ classdef CaravanController  <handle
         extExtractCar              = 2;
         extWaitForCarinPosition    = 3;
         extRestoreCaravan          = 4;
+        extClosingRanks            = 5;
 
         waitFor15               = 1;
         spreadCaravan           = 2;
@@ -171,10 +172,13 @@ classdef CaravanController  <handle
             whichCaravan = Caravan.empty;
             for i = 1:length(obj.allCaravans)
                 if obj.allCaravans(i).id == v.caravanNumber
+                    %TODO gaurd against multiple extractions from this
+                    %caravan at one time
                     whichCaravan = obj.allCaravans(i);
                     break;
                 end
             end
+            
             if ~isempty(whichCaravan)
                 %add to the list
                 newNdx = length(obj.removingCars) + 1;
@@ -311,6 +315,8 @@ classdef CaravanController  <handle
                         %       remove assigned vehicle list item
                     end
                 end
+% removalIdx = find([obj.assignedCars.vehicle.id] == obj.removingCars(i).vehicle.id);
+%                        obj.assignedCars = [obj.assignedCars(1:removalIdx-1) obj.assignedCars(removalIdx + 1: length(obj.assignedCars))];                
                     
                 if obj.assignedCars(i).caravan.GetInsertionPoint > obj.assignedCars(i).vehicle.posY 
                     %SimulationSetup.Pause = true;
@@ -318,7 +324,7 @@ classdef CaravanController  <handle
             end
             
 
-            % REMOVAL STATE MACHINE
+            % EXTRACTIONS STATE MACHINE
             %now work on getting cars out of their caravan
             numR = length(obj.removingCars);
             for i=1:numR
@@ -339,16 +345,29 @@ classdef CaravanController  <handle
                     end
                     
                 elseif obj.removingCars(i).state == obj.extWaitForCarinPosition
-                    if obj.removingCars(i).vehicle.lane == vm.lanes; %in caravan lane?
-                        obj.removingCars(i).caravan.CloseRanks();
+                    if obj.removingCars(i).vehicle.lane == vm.lanes-1; %in merge lane?
                         
                         %update the caravan and vehicle flags
-                        obj.removingCars(i).vehicle.caravanNumber = ...
-                            obj.removingCars(i).caravan.id;
-                        obj.removingCars(i).vehicle.joiningCaravan = false;
-                        
+                        obj.removingCars(i).vehicle.caravanNumber   = 0;
+                        obj.removingCars(i).vehicle.leavingCaravan  = false;
+                        obj.removingCars(i).vehicle.gapMode         = false;
+                        obj.removingCars(i).vehicle.targetVelocity  = ...
+                            obj.removingCars(i).vehicle.preferredSpeed;
+
+                        % Must be called after gapMode is set false on
+                        % exiting car
+                        obj.removingCars(i).caravan.CloseRanks();
+
                         %todo update caravan veihcile array
                         %       remove assigned vehicle list item
+                        obj.removingCars(i).state = obj.extClosingRanks;
+                    end
+                elseif obj.removingCars(i).state == obj.extClosingRanks
+                    %if we are not done
+                    if obj.removingCars(i).caravan.isGapClosingMode()
+                        obj.removingCars(i).caravan.ShareGapTargetVelocity();
+                    else
+                        obj.removingCars(i).state = 0;
                     end
                 end
             end

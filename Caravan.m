@@ -13,7 +13,6 @@ classdef Caravan < hgsetget % subclass hgsetget
         isAbleToTakeNewCars     = true;
         gapLocation             = 0;
         allVehicles             = Vehicle.empty;
-        
     end
     
     methods
@@ -22,11 +21,12 @@ classdef Caravan < hgsetget % subclass hgsetget
             obj.position = obj.allVehicles(1).posY;
             obj.velocity = obj.allVehicles(1).velocity;
         end
-
+        
         function sizeOfGap = GapSize(obj)
             sizeOfGap = obj.allVehicles(obj.gapLocation).posY - ...
                 obj.allVehicles(obj.gapLocation+1).posY ;
         end
+        
         function [gapFront,gapBack] = GetGap(obj)
             gapFront = obj.allVehicles(obj.gapLocation).posY - ...
                 obj.allVehicles(obj.gapLocation).length - ...
@@ -60,7 +60,7 @@ classdef Caravan < hgsetget % subclass hgsetget
                     obj.minVehicleSpacing;
                 insertionPoint = (gapFront + gapBack)/2.0;
             end
-        end          
+        end 
         
         %location = 1 HEAD
         %location = -1 TAIL
@@ -107,12 +107,29 @@ classdef Caravan < hgsetget % subclass hgsetget
                 obj.allVehicles(i).targetVelocity = obj.maxSpeed;
             end
         end
+        
+        
+        
+        function gapMode = isGapClosingMode(obj)
+            gapMode = obj.allVehicles(obj.gapLocation).closingRanks ; 
+        end
+        
+        function  targetVelocity = ShareGapTargetVelocity(obj)
+            targetVelocity = obj.allVehicles(obj.gapLocation).targetVelocity;
+            for i = obj.gapLocation:length(obj.allVehicles)
+                obj.allVehicles(i).targetVelocity = targetVelocity;
+            end
+        end
+        
 
         function obj = CloseRanks(obj)
             % send a message to all cars to return to follow mode
-            for i = 1 : length(obj.allVehicles)
-                obj.allVehicles(i).gapMode = false;
-            end
+            % all cars will follow the velocity commands of the 
+            %'gap' mode car
+            %remove car from caravan vehicle list TODO
+            obj.gapLocation =  find([obj.allVehicles.gapMode],1,'first');
+            obj.allVehicles(obj.gapLocation).gapMode        = false;
+            obj.allVehicles(obj.gapLocation).closingRanks   = true;
         end
         
         

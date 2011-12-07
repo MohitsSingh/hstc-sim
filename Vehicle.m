@@ -32,6 +32,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         moveToCaravanLane       = false;
         moveToMergeLane         = false;    %the caravan controller will tell us when to move
         gapMode                 = false;
+        closingRanks            = false;
         caravanNumber           = 0;  %might be redundant...can lookup in caravan
         caravanPosition         = 0;
         caravanSpeed            = 0;
@@ -178,7 +179,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     %of it, we need to follow a little further behind
                     if obj.gapMode == true
 %                         followDistance = 27/5280.0; %TODO
-                        followDistance = obj.minCaravanDistance + obj.length;
+                        followDistance = obj.minCaravanDistance + 2* obj.length;
                     else
                         followDistance = obj.minCaravanDistance;
                     end
@@ -207,54 +208,63 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     %Then underdamp the response by using only 10% of that
                     %change
                     
-                    if distanceBehind < closestAllowed
-                        %predict new velocity
+% % %                     if distanceBehind < closestAllowed
+% % %                         %predict new velocity
+% % %                         adjustment = (( (obj.velocity*deltaTinHours) - error) / deltaTinHours ) - obj.velocity ;
+% % %                         adjustment = adjustment * 0.10; % only take 10% of adjustment
+% % %                         if obj.lastAdjustment ~= 0
+% % %                             %if the sign is the same then we are good, let
+% % %                             %it ride, else zero it
+% % %                             if ( (adjustment > 0) && (obj.lastAdjustment > 0) ...
+% % %                                ||(adjustment < 0) && (obj.lastAdjustment < 0))
+% % %                            %let the previous adjust ride
+% % %                             else
+% % %                                 obj.lastAdjustment = 0; %sign changed
+% % %                             end
+% % %                         else
+% % %                             obj.targetVelocity = obj.targetVelocity + adjustment;
+% % %                             obj.lastAdjustment = adjustment;
+% % %                         end
+% % %                     elseif distanceBehind > farthestAllowed
+% % %                         %predict new velocity
+% % %                         adjustment = (( (obj.velocity*deltaTinHours) - error) / deltaTinHours ) - obj.velocity ;
+% % %                         adjustment = adjustment * 0.90; % only take 10% of adjustment
+% % %                         if obj.lastAdjustment ~= 0
+% % %                             %if the sign is the same then we are good, let
+% % %                             %it ride, else zero it
+% % %                             if ( (adjustment > 0) && (obj.lastAdjustment > 0) ...
+% % %                                ||(adjustment < 0) && (obj.lastAdjustment < 0))
+% % %                            %let the previous adjust ride
+% % %                             else
+% % %                                 obj.lastAdjustment = 0; %sign changed
+% % %                             end
+% % %                         else
+% % %                             obj.targetVelocity = obj.targetVelocity + adjustment;
+% % %                             obj.lastAdjustment = adjustment;
+% % %                         end
+% % %                     else
+% % %                         %velocity is cool, we are in the band
+% % %                         %restore velocity to previous unadjusted value
+% % %                         if obj.lastAdjustment ~= 0
+% % %                             obj.targetVelocity  = obj.targetVelocity-obj.lastAdjustment;
+% % %                             obj.lastAdjustment = 0;
+% % %                         end
+% % %                     end
+                    obj.posY = min(newPos, inFrontPos - followDistance);
+                    if newPos > inFrontPos - followDistance
+                        %todo should adjust velocity here.
+                        obj.velocity = obj.velocity * (inFrontPos - followDistance) / newPos;
+                    elseif newPos < inFrontPos - 2 *followDistance
+                        %TODO Add closing the gap to follow distance
+                        error = newPos - (inFrontPos - followDistance);
                         adjustment = (( (obj.velocity*deltaTinHours) - error) / deltaTinHours ) - obj.velocity ;
-                        adjustment = adjustment * 0.10; % only take 10% of adjustment
-                        if obj.lastAdjustment ~= 0
-                            %if the sign is the same then we are good, let
-                            %it ride, else zero it
-                            if ( (adjustment > 0) && (obj.lastAdjustment > 0) ...
-                               ||(adjustment < 0) && (obj.lastAdjustment < 0))
-                           %let the previous adjust ride
-                            else
-                                obj.lastAdjustment = 0; %sign changed
-                            end
-                        else
-                            obj.targetVelocity = obj.targetVelocity + adjustment;
-                            obj.lastAdjustment = adjustment;
-                        end
-                    elseif distanceBehind > farthestAllowed
-                        %predict new velocity
-                        adjustment = (( (obj.velocity*deltaTinHours) - error) / deltaTinHours ) - obj.velocity ;
-                        adjustment = adjustment * 0.90; % only take 10% of adjustment
-                        if obj.lastAdjustment ~= 0
-                            %if the sign is the same then we are good, let
-                            %it ride, else zero it
-                            if ( (adjustment > 0) && (obj.lastAdjustment > 0) ...
-                               ||(adjustment < 0) && (obj.lastAdjustment < 0))
-                           %let the previous adjust ride
-                            else
-                                obj.lastAdjustment = 0; %sign changed
-                            end
-                        else
-                            obj.targetVelocity = obj.targetVelocity + adjustment;
-                            obj.lastAdjustment = adjustment;
-                        end
-                    else
-                        %velocity is cool, we are in the band
-                        %restore velocity to previous unadjusted value
-                        if obj.lastAdjustment ~= 0
-                            obj.targetVelocity  = obj.targetVelocity-obj.lastAdjustment;
-                            obj.lastAdjustment = 0;
-                        end
+                        adjustment = adjustment * 1.0; % only take 10% of adjustment
+                        
+                        obj.targetVelocity = obj.velocity + adjustment;
+                    elseif obj.closingRanks
+                        %our position is good, so turn this off
+                        obj.closingRanks = false;
                     end
-% %                     obj.posY = min(newPos, inFrontPos - followDistance);
-% %                     if newPos > inFrontPos - followDistance
-% %                         %todo should adjust velocity here.
-% %                         obj.velocity = obj.velocity * (inFrontPos - followDistance) / newPos;
-% %                         %TODO Add closing the gap to follow distance
-% %                     end
                 elseif (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     % We can advance the entire way
                     obj.posY = newPos;
