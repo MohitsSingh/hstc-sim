@@ -85,7 +85,7 @@ classdef TrafficGen
         % time step.
         function [obj, vehicles] = TimeStep(obj)
             time = obj.previousTime + obj.timeStep;
-            vehicles = Vehicle.empty;
+            vehicles(1000) = Vehicle;
             vId = obj.lastVehicleId;
             % For each lane, see if we have to create any vehicles.
             % Don't do the caravan lane;
@@ -95,13 +95,17 @@ classdef TrafficGen
                 % times less than the current time, create a vehicle
                 i = obj.timeIndex(lane);
                 maxIndex = size(obj.arrivalTimes, 2);
+                v = 0;
                 while ((i < maxIndex) && (obj.arrivalTimes(lane, i) < time))
                     vId = vId + 1;
-                    v = TrafficGen.NewVehicle(lane, vId, obj.caravanThreshold, obj.useCaravans);
-                    vehicles = [vehicles v];
+                    v = v+ 1;
+                    vehicles(v) = TrafficGen.NewVehicle(lane, vId, obj.caravanThreshold, obj.useCaravans);
                     i = i + 1;
                 end
                 
+                if (v < 1000)
+                    vehicles = vehicles(1:v);
+                end
                 obj.timeIndex(lane) = i;
             end
             
@@ -199,8 +203,8 @@ classdef TrafficGen
             end
         end
         
-        % Now pick a desitination ramp anywhere from 10 to 250 miles.
-        v.destinationRamp = 10+(250-10) * rand();
+        % Now pick a desitination ramp anywhere from 20 to 250 miles.
+        v.destinationRamp = 20+(250-50) * rand();
         v.destination = v.destinationRamp;
         
         % And a drag area between 0.5 and 1.2
