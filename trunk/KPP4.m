@@ -4,13 +4,12 @@ function KPP4()
 
 tic;
 
-disp('*******************************BAD VALUES*********************');
 lanes = 5;
-arrivalRate = 100; %500;  % per hour in each travel lane.
+arrivalRate = 500;  % per hour in each travel lane.
 deltaT = 10;        % in seconds
 timeStep = 1/(60/deltaT)/60;    % in units of an hour.
 useCaravan = true;
-fillHours = 1.0;
+fillHours = 1;
 trackId = -999;
 numberTests = 3;
 
@@ -48,8 +47,8 @@ end
 toc
 fprintf(1, 'Highway filled\n');
 
-numTestsRun = 0;
-disp ('***********BAD VALUES***********')
+numTestsRun = 5;
+
 
 caravanMPG = zeros(1, numberTests);
 nonCaravanMPG = zeros(1, numberTests);
@@ -68,11 +67,8 @@ while (numTestsRun < numberTests)
     % Now create a vehicle that we will track and use it to terminate the
     % simulation
     % First get a lane, then create the vehicle and insert it into the highway
-    trackLane = int32(1 + ((lanes - 2) - 1) * rand())
-    v= TrafficGen.NewVehicle (trackLane, trackId, 0, false);
-
-    disp ('***********BAD VALUES***********')
-    v.destinationRamp = 10 + numTestsRun;
+    trackLane = round(1 + ((lanes - 2) - 1) * rand());
+    v = TrafficGen.NewVehicle (trackLane, trackId, 0, false);
 
     vehicles = [v];
     vm = AddVehicles(vm, vehicles);
@@ -122,13 +118,15 @@ while (numTestsRun < numberTests)
                 nonCaravanCount(numTestsRun) = nonCaravanCount(numTestsRun) + 1;
                 nonCaravanMPG(numTestsRun) = nonCaravanMPG(numTestsRun) + v.avgMPG;
             end
+            if (v.id == trackId)
+                trackedDistance(numTestsRun) = v.distanceTraveled;
+                trackedMPG(numTestsRun) = v.avgMPG;
+                trackedTime(numTestsRun) = v.driveTime;
+            end
             v.distanceTraveled = 0.0;
             v.driveTime = 0.0;
             v.avgMPG = 0.0;
             v.avgMPGCounter = 0;
-            if (v.id == trackId)
-                trackedV = v;
-            end
         end
     end
     for i = 1:length(vm.exitedVehicles)
@@ -145,13 +143,15 @@ while (numTestsRun < numberTests)
                 nonCaravanCount(numTestsRun) = nonCaravanCount(numTestsRun) + 1;
                 nonCaravanMPG(numTestsRun) = nonCaravanMPG(numTestsRun) + v.avgMPG;
             end
+            if (v.id == trackId)
+                trackedDistance(numTestsRun) = v.distanceTraveled;
+                trackedMPG(numTestsRun) = v.avgMPG;
+                trackedTime(numTestsRun) = v.driveTime;
+            end
             v.distanceTraveled = 0.0;
             v.driveTime = 0.0;
             v.avgMPG = 0.0;
             v.avgMPGCounter = 0;
-            if (v.id == trackId)
-                trackedV = v;
-            end
         end
     end
 
@@ -172,29 +172,86 @@ while (numTestsRun < numberTests)
 %     nonCaravanMpg = mean(nonzeros(([vm.currentVehicles.caravanNumber] <= 0) .* [vm.currentVehicles.fuelEconomy]))
 %     avgMpg = mean([vm.currentVehicles.fuelEconomy])
 
-    fprintf(1, 'Tracked vehicle went %f\n', trackedV.distanceTraveled);
-    fprintf(1, 'Tracked vehicle travel time (hours) %f\n', trackedV.driveTime/60/60);
-    fprintf(1, 'Tracked vehicle MPH: %f\n', trackedV.distanceTraveled/(trackedV.driveTime/60/60));
-    fprintf(1, 'Tracked vehicle target velocity = %f\n', trackedV.targetVelocity);
-    fprintf(1, 'Tracked vehicle velocity = %f\n', trackedV.velocity);
-    fprintf(1, 'Tracked Vehicle avg MPG = %f\n', trackedV.avgMPG);
-    
-    trackedDistance(numTestsRun) = trackedV.distanceTraveled;
-    trackedMPG(numTestsRun) = trackedV.avgMPG;
-    trackedTime(numTestsRun) = trackedV.driveTime;
+    fprintf(1, 'Tracked vehicle went %f\n', trackedDistance(numTestsRun));
+    fprintf(1, 'Tracked vehicle travel time (hours) %f\n', trackedTime(numTestsRun)/60/60);
+    fprintf(1, 'Tracked vehicle MPH: %f\n', trackedDistance(numTestsRun)/(trackedTime(numTestsRun)/60/60));
+    fprintf(1, 'Tracked Vehicle avg MPG = %f\n', trackedTime(numTestsRun));
 end
 
-caravanMPG
-nonCaravanMPG
-caravanDistance
-nonCaravanDistance
-caravanTime
-nonCaravanTime
-caravanCount
-nonCaravanCount
-trackedDistance
-trackedMPG
-trackedTime
+fprintf(1, 'caravanMPG: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', caravanMPG(i));
+end
+fprintf(1, '\n\n');
+
+fprintf(1, 'nonCaravanMPG: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', nonCaravanMPG(i));
+end
+fprintf(1, '\n\n');
+
+
+fprintf(1, 'caravanDistance: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', caravanDistance(i));
+end
+fprintf(1, '\n\n');
+
+
+fprintf(1, 'nonCaravanDistance: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', nonCaravanDistance(i));
+end
+fprintf(1, '\n\n');
+
+
+fprintf(1, 'caravanTime: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', caravanTime(i));
+end
+fprintf(1, '\n\n');
+
+
+fprintf(1, 'nonCaravanTime: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', nonCaravanTime(i));
+end
+fprintf(1, '\n\n');
+
+
+fprintf(1, 'caravanCount: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', caravanCount(i));
+end
+fprintf(1, '\n\n');
+
+
+fprintf(1, 'nonCaravanCount: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', nonCaravanCount(i));
+end
+fprintf(1, '\n\n');
+
+
+fprintf(1, 'trackedDistance: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', trackedDistance(i));
+end
+fprintf(1, '\n\n');
+
+
+fprintf(1, 'trackedMPG: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', trackedMPG(i));
+end
+fprintf(1, '\n\n');
+
+
+fprintf(1, 'trackedTime: ');
+for i=1:numTestsRun
+    fprintf(1, '%f, ', trackedTime(i));
+end
+fprintf(1, '\n\n');
 
 toc
 end
