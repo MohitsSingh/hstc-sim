@@ -108,9 +108,10 @@ classdef CaravanController  <handle
                  % (vehicles are put into list in ascending order)
                 if i==length(whichCars)
                     whichCars(i).moveToCaravanLane = true;
+                    caravan.allVehicles = whichCars(i);
+                else
+                    obj.AssignCarToCaravan(whichCars(i), caravan); 
                 end
-        
-               obj.AssignCarToCaravan(whichCars(i), caravan); 
             end 
 
             obj.AddCaravan(caravan);
