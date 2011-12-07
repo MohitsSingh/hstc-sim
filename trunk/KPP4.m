@@ -110,6 +110,9 @@ fprintf(1, 'Caravan travel time (hours): %f\n', caravanTime/60/60);
 fprintf(1, 'Average caravan MPH: %f\n', caravanDistance/(caravanTime/60/60));
 fprintf(1, 'Total number of vehicles: %d\n', length(vm.currentVehicles) + length(vm.exitedVehicles));
 fprintf(1, 'Caravan vehicles: %d\n', caravanCount);
+caravanMpg = mean(nonzeros(([vm.currentVehicles.caravanNumber] > 0) .* [vm.currentVehicles.fuelEconomy]))
+nonCaravanMpg = mean(nonzeros(([vm.currentVehicles.caravanNumber] <= 0) .* [vm.currentVehicles.fuelEconomy]))
+avgMpg = mean([vm.currentVehicles.fuelEconomy])
 
 toc
 end
