@@ -358,15 +358,15 @@ classdef Vehicle < hgsetget % subclass hgsetget
             
             trailingDistance = leadCarPos - obj.posY;
             
-            slipStreamRegion = 4 * obj.length;
+            slipStreamRegion = 5 * obj.length;
             
             if trailingDistance <= 0 || trailingDistance > slipStreamRegion
                 % nobody in front of me or too far away to care
-                density = 1.29;
+                density = 1.22;
             else
                 % modify density as a ratio of trailingDistance
-                density = 1.29 - .65 * ...
-                    ((slipStreamRegion - trailingDistance) / slipStreamRegion);
+                density = 1.22 * (1 - .14 * ...
+                    ((slipStreamRegion - trailingDistance) / slipStreamRegion));
             end
             
             forceOfDrag=.5 * density * (obj.velocity * 0.44704) ^ 2 ...
@@ -375,7 +375,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % TODO incorporate acceleration
             % TODO incorporate velocity
             % TODO calculate work
-            powerOfDrag = forceOfDrag * (obj.velocity * 0.44704) % watts
+            powerOfDrag = forceOfDrag * (obj.velocity * 0.44704); % watts
             
             %convert to horsepower, and figure out weight of gas consumed
             % 1 hp = 746 W = 746 (kg·m/s2)·(m/s)
