@@ -43,15 +43,15 @@ SimulationSetup.SlowLoop                = 0;
 SimulationSetup.focusId                 = 0;
 SimulationSetup.Pause                   = false;
 SimulationSetup.End                     = false;
+SimulationSetup.ShowGUI                 = true;
 
 
 while ~startSimulation
     selection = menu('Main Menu',...
-                    'Run KPP1 Scenario',...
-                    'Run KPP2 Scenario',...
-                    'Run KPP3 Scenario',...
-                    'Run KPP4 Scenario',...
-                    'Run KPP5 Scenario',...
+                    'Run KPP 1 Scenario',...
+                    'Run KPP 2 Scenario',...
+                    'Run KPP 3 & 4 Scenario',...
+                    'Run KPP 5 Scenario',...
                     'Run Interactive Simulation',...
                     'Run Batched Simulations',...
                     'Edit Simulation Parameters',...
@@ -69,26 +69,24 @@ while ~startSimulation
             startSimulation             = true;
             SimulationSetup.focusId     = 1;
         case 3
-            Kpp3_Generate;
+            KPP4();
             startSimulation             = true;
+            SimulationSetup.ShowGUI     = false;
         case 4
-%             Kpp4_Generate;
-            KPP4(1);
-            startSimulation             = true;
-        case 5
             Kpp5_Generate;
             SimulationSetup.SlowLoop    = 1;
             SimulationSetup.SimTimeStep = 0.100;
             startSimulation             = true;
-            SimulationSetup.SimTimeStep = .1;
             SimulationSetup.focusId     = 4;
-        case 6
+            SimulationSetup.ShowGUI     = false;
+        case 5
             startSimulation             = true;
-        case 7  
+        case 6  
             startSimulation             = true;
-        case 8
+            SimulationSetup.ShowGUI     = false;
+        case 7
             EditSimulationParameters;
-        case 9
+        case 8
             close all
             return
     end
@@ -110,15 +108,17 @@ startTime   = clock;
 t           = 0;
 tinc        = SimulationSetup.SimTimeStep; %seconds
 
-guiHandle = GUI;
-setappdata(guiHandle,'vm',vm);
-GUI('updateGUI');
+if SimulationSetup.ShowGUI
+    guiHandle = GUI;
+    setappdata(guiHandle,'vm',vm);
+    GUI('updateGUI');
+    
+    gh=guihandles(guiHandle);
 
-gh=guihandles(guiHandle);
-
-if SimulationSetup.focusId > 0
-   set(gh.focusCheckbox, 'Value', 1);
-   set(gh.focusSelector, 'Value', SimulationSetup.focusId); 
+    if SimulationSetup.focusId > 0
+       set(gh.focusCheckbox, 'Value', 1);
+       set(gh.focusSelector, 'Value', SimulationSetup.focusId); 
+    end
 end
 
 while ~simulationOver
@@ -129,7 +129,9 @@ while ~simulationOver
     
     if SimulationSetup.Pause == true
         pause(1);
-        GUI('updateGUI');
+        if SimulatioNSetup.ShowGUI
+            GUI('updateGUI');
+        end
         continue;
     end
         
@@ -139,6 +141,8 @@ while ~simulationOver
     if sum([vm.currentVehicles.gapMode]) > 0
         tinc=2;
 %         SimulationSetup.SlowLoop = 1;
+    else
+%         tinc=SimulationSetup.SimTimeStep;
     end
 % %     fprintf('%d, ',sum([vm.currentVehicles.gapMode]) );
 % %     for i= 1:10
@@ -156,8 +160,10 @@ while ~simulationOver
     turnNumber = turnNumber+ 1;
     t = t + tinc;
     
-    setappdata(guiHandle,'vm',vm);
-    GUI('updateGUI');
+    if SimulationSetup.ShowGUI
+        setappdata(guiHandle,'vm',vm);
+        GUI('updateGUI');
+    end
     
     elapsedTime=toc;
     if SimulationSetup.SlowLoop
@@ -166,6 +172,5 @@ while ~simulationOver
     
 end
 
-GUI;
 disp('End of simulation');
     

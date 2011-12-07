@@ -34,7 +34,7 @@ for i = 1:CaravanControllerSetup.MaxCaravanSize
     end
     
     %put all cars in caravan lane
-    allCars(i).lane = 4;
+    allCars(i).lane = 5;
     allCars(i).caravanNumber = 1; % non-zero caravan number
     
     c.AddToVehicleList(allCars(i));
