@@ -30,6 +30,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
         leavingCaravan          = false;
         wantsOutOfCaravan       = false;
         moveToCaravanLane       = false;
+        moveDelay               = 0;
         moveToMergeLane         = false;    %the caravan controller will tell us when to move
         gapMode                 = false;
         closingRanks            = false;
@@ -143,15 +144,18 @@ classdef Vehicle < hgsetget % subclass hgsetget
             elseif obj.moveToCaravanLane == true
                 %TODO account for lateral velocity 
                 caravanLane = vm.lanes  ;
-
-                if highway(highwayIndex,2) == caravanLane %caravan lane?
-                    obj.moveToCaravanLane = false;
-                else
-                    obj.lane = caravanLane;
-                    obj.posY = obj.caravanPosition ;
-                    newPos = obj.posY;
-                    highway(highwayIndex,3) = obj.posY;
-                    VehicleMgr.LaneChange(highwayIndex);
+                obj.moveDelay = obj.moveDelay + 1;
+                if obj.moveDelay > 12
+                    if highway(highwayIndex,2) == caravanLane %caravan lane?
+                        obj.moveToCaravanLane = false;
+                        obj.moveDelay = 0 ;
+                    else
+                        obj.lane = caravanLane;
+                        obj.posY = obj.caravanPosition ;
+                        newPos = obj.posY;
+                        highway(highwayIndex,3) = obj.posY;
+                        VehicleMgr.LaneChange(highwayIndex);
+                    end
                 end
             end
             
@@ -252,11 +256,15 @@ classdef Vehicle < hgsetget % subclass hgsetget
 % % %                     end
                     obj.posY = min(newPos, inFrontPos - followDistance);
                     if newPos > inFrontPos - followDistance
-                       error = newPos - (inFrontPos - followDistance);
-                       adjustment = (( (obj.velocity*deltaTinHours) - error) / deltaTinHours ) - obj.velocity ;
-                       adjustment = adjustment * 1.0; % only take 10% of adjustment
-                       
-                       obj.velocity = obj.velocity + adjustment;
+%                         if obj.closingRanks
+%                             obj.velocity = obj.velocity * (inFrontPos - followDistance) / newPos;
+%                         else
+                            error = newPos - (inFrontPos - followDistance);
+                           adjustment = (( (obj.velocity*deltaTinHours) - error) / deltaTinHours ) - obj.velocity ;
+                           adjustment = adjustment * 1.0; % only take 10% of adjustment
+
+                           obj.velocity = obj.velocity + adjustment;
+%                         end
                     elseif newPos < inFrontPos - 2 *followDistance
                         %TODO Add closing the gap to follow distance
                         error = newPos - (inFrontPos - followDistance);
@@ -267,6 +275,13 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     elseif obj.closingRanks
                         %our position is good, so turn this off
                         obj.closingRanks = false;
+                    end
+                    if obj.closingRanks 
+                        error = newPos - (inFrontPos - followDistance);
+                        if error <6.0/5280
+                            obj.closingRanks = false;
+                        end
+                        disp(error);
                     end
                 elseif (inFrontPos > (newPos + obj.minNonCaravanDistance))
                     % We can advance the entire way

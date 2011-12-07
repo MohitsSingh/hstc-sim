@@ -17,6 +17,8 @@ clear classes
 
 global CaravanControllerSetup
 global SimulationSetup
+global StatisticsSetup
+
 global guiHandle
 
 cc = CaravanController.getInstance();
@@ -44,7 +46,11 @@ SimulationSetup.focusId                 = 0;
 SimulationSetup.Pause                   = false;
 SimulationSetup.End                     = false;
 SimulationSetup.ShowGUI                 = true;
+SimulationSetup.TimeElapsed             = 0;
 
+StatisticsSetup.DisplayKpp1                  = false;
+StatisticsSetup.DisplayKpp2                  = false;
+StatisticsSetup.DisplayKpp5                  = false;
 SimParams.genTraffic                    = false;
 SimParams.numLanes                      = 5;
 SimParams.trafficRate                   = 100;
@@ -52,21 +58,23 @@ SimParams.trafficRate                   = 100;
 
 while ~startSimulation
     selection = menu('Main Menu',...
-                    'Run KPP 1 Scenario',...
-                    'Run KPP 2 Scenario',...
+                    'Run KPP1 Scenario',...
+                    'Run KPP2 Scenario',...
                     'Run KPP 3 & 4 Scenario',...
-                    'Run KPP 5 Scenario',...
+                    'Run KPP5 Scenario',...
                     'Run Interactive Simulation',...
                     'Run Batched Simulations',...
                     'Edit Simulation Parameters',...
                     'Exit');
     switch selection
         case 1
+            StatisticsSetup.DisplayKpp1  = true;
             Kpp1_Generate;
             SimulationSetup.SlowLoop    = 0;
             startSimulation             = true;
             SimulationSetup.focusId     = 1;
         case 2
+            StatisticsSetup.DisplayKpp2  = true;
             Kpp2_Generate;
             SimulationSetup.SlowLoop    = 1;
             SimulationSetup.SimTimeStep = 0.100;
@@ -77,6 +85,7 @@ while ~startSimulation
             startSimulation             = true;
             SimulationSetup.ShowGUI     = false;
         case 4
+            StatisticsSetup.DisplayKpp5  = true;
             Kpp5_Generate;
             SimulationSetup.SlowLoop    = 1;
             SimulationSetup.SimTimeStep = 0.100;
@@ -87,11 +96,11 @@ while ~startSimulation
         case 5
             startSimulation             = true;
             SimParams.genTraffic = true;
-        case 6  
+        case 6
             startSimulation             = true;
             SimulationSetup.ShowGUI     = false;
             SimParams.genTraffic = true;
-        case 7
+        case 7  
 %             EditSimulationParameters;
             prompt= {'Number of lanes:' ...
                 'Traffic Arrival Rate (vehicles/hr/lane):' ...
@@ -135,18 +144,19 @@ t           = 0;
 tinc        = SimulationSetup.SimTimeStep; %seconds
 
 if SimulationSetup.ShowGUI
-    guiHandle = GUI;
-    setappdata(guiHandle,'vm',vm);
-    GUI('updateGUI');
-    
-    gh=guihandles(guiHandle);
+guiHandle = GUI;
+setappdata(guiHandle,'vm',vm);
+GUI('updateGUI');
 
-    if SimulationSetup.focusId > 0
-       set(gh.focusCheckbox, 'Value', 1);
-       set(gh.focusSelector, 'Value', SimulationSetup.focusId); 
-    end
+gh=guihandles(guiHandle);
+
+if SimulationSetup.focusId > 0
+   set(gh.focusCheckbox, 'Value', 1);
+   set(gh.focusSelector, 'Value', SimulationSetup.focusId); 
+end
 end
 
+isStartedKpp5 = false;
 while ~simulationOver
     tic
     if SimulationSetup.End == true
@@ -156,11 +166,18 @@ while ~simulationOver
     if SimulationSetup.Pause == true
         pause(1);
         if SimulatioNSetup.ShowGUI
-            GUI('updateGUI');
+        GUI('updateGUI');
         end
         continue;
     end
     
+    if StatisticsSetup.DisplayKpp5  
+        if isStartedKpp5 == false
+            isStartedKpp5 = true;
+            fprintf('Kpp5 Start = %f\n', SimulationSetup.TimeElapsed);
+        end
+    end
+        
     if SimParams.genTraffic
         [tg, newVehicles] = TimeStep(tg);
         vm = AddVehicles(vm, newVehicles);
@@ -168,9 +185,18 @@ while ~simulationOver
         
     vm.TimeStep(tinc);
     cc.Update();
+
+    if StatisticsSetup.DisplayKpp5  
+        numStopped = length(find([vm.currentVehicles.velocity] <= 0.5));
+        if( numStopped == 30)
+            fprintf('Kpp5 Stop = %f\n', SimulationSetup.TimeElapsed);
+            SimulationSetup.End = true;
+        end
+    end
+    
     
     if sum([vm.currentVehicles.gapMode]) > 0
-        tinc=2;
+        tinc=tinc;
 %         SimulationSetup.SlowLoop = 1;
     else
 %         tinc=SimulationSetup.SimTimeStep;
@@ -191,9 +217,12 @@ while ~simulationOver
     turnNumber = turnNumber+ 1;
     t = t + tinc;
     
+    %maintain global time elapsed
+    SimulationSetup.TimeElapsed = t;
+    
     if SimulationSetup.ShowGUI
-        setappdata(guiHandle,'vm',vm);
-        GUI('updateGUI');
+    setappdata(guiHandle,'vm',vm);
+    GUI('updateGUI');
     end
     
     elapsedTime=toc;

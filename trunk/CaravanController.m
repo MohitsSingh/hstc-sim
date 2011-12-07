@@ -27,10 +27,9 @@ classdef CaravanController  <handle
         waitForCarinPosition    = 4;
         insertCar               = 5;
         restoreCaravan          = 6;
+        closingRanks            = 7;
         
         allCaravans             = Caravan.empty;
-        
-%         numAssignedCars         = 0;
     end
     
     methods
@@ -204,6 +203,8 @@ classdef CaravanController  <handle
         end
         function obj = Update(obj)
             global SimulationSetup
+            global StatisticsSetup
+
             vm = VehicleMgr.getInstance;
             
             %first find cars that need a caravan
@@ -262,13 +263,21 @@ classdef CaravanController  <handle
 
                         obj.assignedCars(i).caravan.InsertRequest(2);
                         obj.assignedCars(i).state = obj.spreadCaravan;
+                        if StatisticsSetup.DisplayKpp1
+                            fprintf('Kpp1 Spread End = %f\n', SimulationSetup.TimeElapsed);
+                            SimulationSetup.SimTimeStep = 0.100; % slow sim down for resi;ts
+                        end
                     end
 
                 elseif obj.assignedCars(i).state == obj.spreadCaravan
-                    if obj.assignedCars(i).caravan.GapSize() > 25.0 / 5280.0 
+                    if obj.assignedCars(i).caravan.GapSize() > 27.0 / 5280.0 ... 
                         obj.assignedCars(i).state = obj.waitFor5;
                         %tell the lead cars to go back to normal speed
                         obj.assignedCars(i).caravan.ResumeSpeed();
+                        if StatisticsSetup.DisplayKpp1
+                            fprintf('Kpp1 Spread Start = %f\n', SimulationSetup.TimeElapsed);
+                        end
+
                     end
                     
                 elseif obj.assignedCars(i).state == obj.waitFor5
@@ -296,6 +305,9 @@ classdef CaravanController  <handle
                    
                 elseif obj.assignedCars(i).state == obj.insertCar
                     %TODO undo instantaneous acceleration
+                    if StatisticsSetup.DisplayKpp1
+                        fprintf('Kpp1 Drive Insert Start = %f\n', SimulationSetup.TimeElapsed);
+                    end
                     obj.assignedCars(i).vehicle.velocity = obj.assignedCars(i).caravan.velocity;
                     obj.assignedCars(i).vehicle.targetVelocity = obj.assignedCars(i).vehicle.velocity;
                     obj.assignedCars(i).vehicle.moveToCaravanLane = true;
@@ -308,7 +320,13 @@ classdef CaravanController  <handle
                     
                 elseif obj.assignedCars(i).state == obj.restoreCaravan
                     if obj.assignedCars(i).vehicle.lane == vm.lanes; %in caravan lane?
+                        if StatisticsSetup.DisplayKpp1
+                            fprintf('Kpp1 Driver Insert Stop = %f\n', SimulationSetup.TimeElapsed);
+                        end
                         obj.assignedCars(i).caravan.CloseRanks();
+                        if StatisticsSetup.DisplayKpp1
+                            fprintf('Kpp1 Close Start = %f\n', SimulationSetup.TimeElapsed);
+                        end
                         
                         %update the caravan and vehicle flags
                         obj.assignedCars(i).vehicle.caravanNumber = ...
@@ -316,17 +334,23 @@ classdef CaravanController  <handle
                         obj.assignedCars(i).vehicle.joiningCaravan = false;
                         
                         %todo update caravan veihcile array
-                        obj.assignedCars(i).state = 0;
+                        obj.assignedCars(i).state = obj.closingRanks;
                         %       remove assigned vehicle list item
                     end
-                    
+                elseif obj.assignedCars(i).state == obj.closingRanks
+                    %if we are not done
+                    if obj.assignedCars(i).caravan.isGapClosingMode()
+                        obj.assignedCars(i).caravan.ShareGapTargetVelocity();
+                    else
+                        obj.assignedCars(i).state = 0;
+                        if StatisticsSetup.DisplayKpp1
+                            fprintf('Kpp1 Complete = %f\n', SimulationSetup.TimeElapsed);
+                        end
+                    end
                 end
 % removalIdx = find([obj.assignedCars.vehicle.id] == obj.removingCars(i).vehicle.id);
 %                        obj.assignedCars = [obj.assignedCars(1:removalIdx-1) obj.assignedCars(removalIdx + 1: length(obj.assignedCars))];                
                     
-                if obj.assignedCars(i).caravan.GetInsertionPoint > obj.assignedCars(i).vehicle.posY 
-                    %SimulationSetup.Pause = true;
-                end
             end
             
 
