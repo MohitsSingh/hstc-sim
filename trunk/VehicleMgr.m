@@ -16,9 +16,6 @@ classdef VehicleMgr <handle
     end
     
     methods
-        function delete(obj)
-            VehicleMgr.getInstance(-1);
-        end 
         % Constructor - Requires number of lanes and timesteps.
         %don;t call this directly...use getInstance instead
         function obj = VehicleMgr(lanesIn)
@@ -180,21 +177,13 @@ classdef VehicleMgr <handle
     end
     methods (Static)
         function managerObj = getInstance(numLanes)
-            mlock
             persistent localObj
     
             if isempty(localObj) || ~isvalid(localObj)
                 if nargin == 0
-                    numLanes = 4;
+                    numLanes = 5;
                 end
-                if numLanes == -1
-                    munlock
-                    clear
-                    localObj = VehicleMgr.empty;
-                    disp('Cleared VehicleMgr');
-                else
-                    localObj = VehicleMgr(numLanes);
-                end
+                localObj = VehicleMgr(numLanes);
             end
             managerObj = localObj;
         end

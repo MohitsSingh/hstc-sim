@@ -10,6 +10,16 @@ classdef CaravanController  <handle
                                   % .caravan
                                   % .state  - waitFor15, spread caravan,
                                   % insert car, restore caravan
+        removingCars            ; % a array  of structures
+                                  % .vehicle object
+                                  % .caravan
+                                  % .state  - spread caravan,
+                                  % extract car, restore caravan
+        extSpreadCaravan           = 1;
+        extExtractCar              = 2;
+        extWaitForCarinPosition    = 3;
+        extRestoreCaravan          = 4;
+
         waitFor15               = 1;
         spreadCaravan           = 2;
         waitFor5                = 3;
@@ -19,14 +29,10 @@ classdef CaravanController  <handle
         
         allCaravans             = Caravan.empty;
         
-        numAssignedCars         = 0;
+%         numAssignedCars         = 0;
     end
     
     methods
-        function delete(obj)
-            CaravanController.getInstance(-1);
-        end 
-        
         %determine if there is a suitable caravan for the car
         %a suitable caravan is within 20 miles behind the current car, 
         %and has a destination at least
@@ -140,14 +146,15 @@ classdef CaravanController  <handle
         
         %add vehicle to list of cars and caravans to be tracked.  
         %keep track of which car and which caravan
-        %remove car from the wants caravan list
+        %clear the wants caravan flag
         function obj = AssignCarToCaravan(obj,v,whichCaravan)
             %add to the list
-            obj.assignedCars(obj.numAssignedCars+1).vehicle = v;
-            obj.assignedCars(obj.numAssignedCars+1).caravan = whichCaravan;
-            obj.assignedCars(obj.numAssignedCars+1).state   = obj.waitFor15;
+            newNdx = length(obj.assignedCars) + 1;
+            obj.assignedCars(newNdx).vehicle = v;
+            obj.assignedCars(newNdx).caravan = whichCaravan;
+            obj.assignedCars(newNdx).state   = obj.waitFor15;
             
-            obj.numAssignedCars = obj.numAssignedCars+1;
+%             obj.numAssignedCars = obj.numAssignedCars+1;
             
             %remove car from list of cars wanting a caravan
             v.wantsCaravan      = false;
@@ -155,6 +162,36 @@ classdef CaravanController  <handle
             %todo...be smarter about when to move the car over to the merge lane
             v.moveToMergeLane   = true; %tell the car to move over
         end
+        
+        %add vehicle to list of cars and caravans to be tracked.  
+        %keep track of which car and which caravan
+        %clear the wants caravan out of caravan flag
+        function obj = RemoveCarFromCaravan(obj,v)
+            %confirm car in the list of caravans
+            whichCaravan = Caravan.empty;
+            for i = 1:length(obj.allCaravans)
+                if obj.allCaravans(i).id == v.caravanNumber
+                    whichCaravan = obj.allCaravans(i);
+                    break;
+                end
+            end
+            if ~isempty(whichCaravan)
+                %add to the list
+                newNdx = length(obj.removingCars) + 1;
+                obj.removingCars(newNdx).vehicle = v;
+                obj.removingCars(newNdx).caravan = whichCaravan;
+                obj.removingCars(newNdx).state   = obj.extSpreadCaravan;
+
+                %issue extract request to caravan
+                extractVid = v.id;
+                whichCaravan.ExtractRequest(extractVid);   
+
+                %remove car from list of cars wanting a caravan
+                v.wantsOutOfCaravan = false;
+                v.leavingCaravan    = true;
+            end
+        end
+        
         function acceleration = CalculateAccelerationFromIntersectionPoint(obj,c,v,t)
             cv = c.allVehicles(c.insertLocation+1);
             intCaravanPosition = cv.posY + cv.velocity * t;
@@ -179,9 +216,12 @@ classdef CaravanController  <handle
                             %todo set speed and following distance
                         end
                     end
+                elseif v.wantsOutOfCaravan
+                    RemoveCarFromCaravan(obj,v)
                 end
             end
             
+            %update the caravan position and velcoity information
             obj.allCaravans.Update();
             
             %now work on getting cars to their caravan
@@ -189,7 +229,8 @@ classdef CaravanController  <handle
             %tell caravan when separate to Insert car
             %tell car when to insert
             %remove car from assigned list
-            for i=1:obj.numAssignedCars
+            numA = length(obj.assignedCars);
+            for i=1:numA
                 
                 %a simple statemachine is used for each caravan /car pair
                 %when the carvan is 15 seconds away, issue a caravan insert
@@ -212,19 +253,6 @@ classdef CaravanController  <handle
                              obj.assignedCars(i).vehicle.velocity) / (15)  ;
 
                         obj.assignedCars(i).caravan.InsertRequest(2);
-                         
-                        % tell target car to speed up
-% %                         obj.assignedCars(i).vehicle.targetVelocity =  ...
-% %                             obj.assignedCars(i).caravan.velocity-2  ;
-% %                         obj.assignedCars(i).vehicle.targetRate = ...
-% %                         obj.CalculateAccelerationFromIntersectionPoint( ...
-% %                             obj.assignedCars(i).caravan,...
-% %                             obj.assignedCars(i).vehicle,...
-% %                             15/3600);
-                        
-% %                         expectedVelocityAtInt = obj.assignedCars(i).vehicle.velocity + ...
-% %                             obj.assignedCars(i).vehicle.targetRate * 15/3600;
-% %                         disp(expectedVelocityAtInt)
                         obj.assignedCars(i).state = obj.spreadCaravan;
                     end
 
@@ -234,6 +262,7 @@ classdef CaravanController  <handle
                         %tell the lead cars to go back to normal speed
                         obj.assignedCars(i).caravan.ResumeSpeed();
                     end
+                    
                 elseif obj.assignedCars(i).state == obj.waitFor5
                     %if the caravan is 5 seconds away, tell the lead cars to
                     %speedup
@@ -283,22 +312,49 @@ classdef CaravanController  <handle
                 end
             end
             
+
+            % REMOVAL STATE MACHINE
+            %now work on getting cars out of their caravan
+            numR = length(obj.removingCars);
+            for i=1:numR
+                
+                %a simple statemachine is used for each caravan /car pair
+                %when the carvan is 15 seconds away, issue a caravan insert
+                %command
+                %when the caravan is along side the vehicle, tell the
+                %vehicle to move in
+                %when the vehcile is in position, restore speed of lead
+                %vehicles
+                if obj.removingCars(i).state == obj.extSpreadCaravan
+                    if obj.removingCars(i).caravan.GapSize() > 25.0 / 5280.0 ... 
+                        obj.removingCars(i).state = obj.extWaitForCarinPosition;
+                        obj.removingCars(i).vehicle.moveToMergeLane = true;
+                        %tell the lead cars to go back to normal speed
+                        obj.removingCars(i).caravan.ResumeSpeed();
+                    end
+                    
+                elseif obj.removingCars(i).state == obj.extWaitForCarinPosition
+                    if obj.removingCars(i).vehicle.lane == vm.lanes; %in caravan lane?
+                        obj.removingCars(i).caravan.CloseRanks();
+                        
+                        %update the caravan and vehicle flags
+                        obj.removingCars(i).vehicle.caravanNumber = ...
+                            obj.removingCars(i).caravan.id;
+                        obj.removingCars(i).vehicle.joiningCaravan = false;
+                        
+                        %todo update caravan veihcile array
+                        %       remove assigned vehicle list item
+                    end
+                end
+            end
         end
     end
     
     methods (Static)
-        function CaravanControllerObj = getInstance(args)
-            mlock
+        function CaravanControllerObj = getInstance
             persistent localObj
             if isempty(localObj) || ~isvalid(localObj)
-                if nargin == 0
-                    localObj = CaravanController;
-                else
-                    munlock
-                    clear
-                    localObj = CaravanController.empty;
-                    disp('Cleared CaravanController');
-                end
+                localObj = CaravanController;
             end
             CaravanControllerObj = localObj;
             

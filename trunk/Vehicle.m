@@ -1,7 +1,7 @@
 classdef Vehicle < hgsetget % subclass hgsetget
     %VECHICLE Summary of this class goes here
     %   Detailed explanation goes here
-    
+    %TODO if my destination is x miles away, I will want out of caravan
     properties
         id              = 0;
         lane            = 0;   %if lane is -1, not on highway.
@@ -19,45 +19,45 @@ classdef Vehicle < hgsetget % subclass hgsetget
 % braking       0.8–1.0         1.0–1.3 	2               ~ 0.6
 % cornering 	0.7–0.9         0.9–1.0 	3               ??        
 
-        entryRamp       = 0;
-        destinationRamp = 10000.0;       % Set to high value by default.
+        entryRamp               = 0;
+        destinationRamp         = 10000.0;       % Set to high value by default.
         
-        destination     = 0;    %in miles.
+        destination             = 0;    %in miles.
         
-        dragArea        = 0.75;
-        wantsCaravan    = false;
-        joiningCaravan  = false;
-        wantsOutOfCaravan    = false;
-        moveToCaravanLane   = false;
-        moveToMergeLane     = false;    %the caravan controller will tell us when to move
-        insertMode          = false;
-        caravanNumber   = 0;  %might be redundant...can lookup in caravan
-        caravanPosition = 0;
-        fuelEconomy     = 20.0; %mpg
-        baseFuelEconomy = 20.0; %mpg
+        dragArea                = 0.75;
+        wantsCaravan            = false;
+        joiningCaravan          = false;
+        wantsOutOfCaravan       = false;
+        moveToCaravanLane       = false;
+        moveToMergeLane         = false;    %the caravan controller will tell us when to move
+        gapMode              = false;
+        caravanNumber           = 0;  %might be redundant...can lookup in caravan
+        caravanPosition         = 0;
+        fuelEconomy             = 20.0; %mpg
+        baseFuelEconomy         = 20.0; %mpg
         
         %john variables
-        preferredSpeed  = 55;    %45, 55, 65 +-5mph gaussian
-                                %randomize for 1/2/3
-                                %randomize for spread
-        initialVelocity = 0;    %may be set to desired speed +- if
-                                %we are populating a roadway for initial
-                                %conditions
-        targetVelocity  = 0;    % how fast do we want to be going
-        targetRate      = 0;    % how fast do we want to change our speed
+        preferredSpeed          = 55;    %45, 55, 65 +-5mph gaussian
+                                        %randomize for 1/2/3
+                                        %randomize for spread
+        initialVelocity         = 0;    %may be set to desired speed +- if
+                                        %we are populating a roadway for initial
+                                        %conditions
+        targetVelocity          = 0;    % how fast do we want to be going
+        targetRate              = 0;    % how fast do we want to change our speed
         
-        drv             = Driver; %simulator of human agent
-        accModule       = Acc;      %the computerized driver (no steering, though)
+        drv                     = Driver; %simulator of human agent
+        accModule               = Acc;      %the computerized driver (no steering, though)
         
         % Statitics to collect for KPP4
-        driveTime = 0.0;        % Time from entry to exit in seconds
-        distanceTraveled = 0.0; % How far have we gone?  In miles
+        driveTime               = 0.0;        % Time from entry to exit in seconds
+        distanceTraveled        = 0.0; % How far have we gone?  In miles
         
         %Minimum distance between cars NOT in caravan
-        minNonCaravanDistance = 0.005681 % 30 feet in miles.
+        minNonCaravanDistance   = 0.005681 % 30 feet in miles.
         
         %Minimum distance between cars in caravan
-        minCaravanDistance = 0.0005681 % 3 feet in miles.
+        minCaravanDistance      = 0.0005681 % 3 feet in miles.
                                         
     end
    
@@ -161,7 +161,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                 if obj.caravanNumber ~= 0 || obj.joiningCaravan
                     %if we are the car that has something inserted in front
                     %of it, we need to follow a little further behind
-                    if obj.insertMode == true
+                    if obj.gapMode == true
                         followDistance = 27/5280.0;
                     else
                         followDistance = obj.minCaravanDistance;

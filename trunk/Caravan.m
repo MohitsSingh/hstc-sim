@@ -67,7 +67,7 @@ classdef Caravan < hgsetget % subclass hgsetget
         %location = 2..N this vehcile is the new one at that location
         function obj = InsertRequest(obj,location)
             obj.insertLocation = location;
-            obj.allVehicles(location+1).insertMode = true;
+            obj.allVehicles(location+1).gapMode = true;
             % send a message to all cars behind insertion point to
             % slow down 2 mph.   All cars in front of point  to speed up 2mph
             for i = 1 : obj.insertLocation
@@ -75,6 +75,26 @@ classdef Caravan < hgsetget % subclass hgsetget
                 obj.allVehicles(i).targetRate       = 0.2;
             end
         end
+
+        function obj = ExtractRequest(obj,vid)
+            
+            for i=1:length(obj.allVehicles)
+                if obj.allVehicles(i).id == vid
+                    extractLocation = i;
+                    break;
+                end
+            end
+
+            %TODO what to do if vehicle is head or tail
+            obj.allVehicles(extractLocation+1).gapMode = true;
+            % send a message to all cars behind insertion point to
+            % slow down 2 mph.   All cars in front of point  to speed up 2mph
+            for i = 1 : extractLocation
+                obj.allVehicles(i).targetVelocity   = obj.allVehicles(i).targetVelocity + 2.0;
+                obj.allVehicles(i).targetRate       = 0.2;
+            end
+        end
+        
         
         function obj = ResumeSpeed(obj)
             % send a message to all cars behind insertion point to
@@ -84,10 +104,10 @@ classdef Caravan < hgsetget % subclass hgsetget
             end
         end
 
-        function obj = CloseRanks(obj,location)
+        function obj = CloseRanks(obj)
             % send a message to all cars to return to follow mode
             for i = 1 : length(obj.allVehicles)
-                obj.allVehicles(i).insertMode = false;
+                obj.allVehicles(i).gapMode = false;
             end
         end
         
