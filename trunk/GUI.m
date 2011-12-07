@@ -180,7 +180,9 @@ function updateGUI()
     numJoining = sum([vehicles.joiningCaravan]);
     numNotInCaravan = sum([vehicles.caravanNumber] <= 0);
     avgVelocity = mean([vehicles.velocity]);
-    avgEconomy = mean([vehicles.fuelEconomy]);
+%     avgEconomy = mean([vehicles.fuelEconomy]);
+    caravanMpg = mean(nonzeros(([vm.currentVehicles.caravanNumber] > 0) .* [vm.currentVehicles.fuelEconomy]));
+    nonCaravanMpg = mean(nonzeros(([vm.currentVehicles.caravanNumber] <= 0) .* [vm.currentVehicles.fuelEconomy]));
     
     % Plot rectangles and compile statistics for vehicles
     for i=1:length(vehicles)
@@ -190,7 +192,7 @@ function updateGUI()
         if (xl(1) <= v.posY <= xl(2))
             r = rectangle('Position',[v.posY v.lane-.05 v.length .1], ...
                 'Curvature',[0 0]);
-
+            
             % todo: add more options
             if v.wantsCaravan
                 set(r, 'FaceColor','blue');
@@ -204,7 +206,7 @@ function updateGUI()
     
     set(gh.numberValues,'String',[numInCaravan; numToJoin; ...
         numJoining; numNotInCaravan]);
-    set(gh.averageValues,'String',[avgVelocity; avgEconomy]);
+    set(gh.averageValues,'String',[avgVelocity; nonCaravanMpg; caravanMpg]);
     
     set(focusSelector, 'String', [vehicles.id]');
     
