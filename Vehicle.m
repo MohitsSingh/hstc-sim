@@ -375,9 +375,12 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % TODO incorporate acceleration
             % TODO incorporate velocity
             % TODO calculate work
-            powerOfDrag = forceOfDrag * obj.velocity;
+            powerOfDrag = forceOfDrag * (obj.velocity * 0.44704);
             
             %convert to horsepower, and figure out weight of gas consumed
+            % 1 hp = 746 W = 746 (kg·m/s2)·(m/s)
+            powerOfDragHP = powerOfDrag / 746;
+            
             %convert the weight to gallons
             %divide gallons into miles travelled for mpg
             
