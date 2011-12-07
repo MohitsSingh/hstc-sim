@@ -252,8 +252,11 @@ classdef Vehicle < hgsetget % subclass hgsetget
 % % %                     end
                     obj.posY = min(newPos, inFrontPos - followDistance);
                     if newPos > inFrontPos - followDistance
-                        %todo should adjust velocity here.
-                        obj.velocity = obj.velocity * (inFrontPos - followDistance) / newPos;
+                       error = newPos - (inFrontPos - followDistance);
+                       adjustment = (( (obj.velocity*deltaTinHours) - error) / deltaTinHours ) - obj.velocity ;
+                       adjustment = adjustment * 1.0; % only take 10% of adjustment
+                       
+                       obj.velocity = obj.velocity + adjustment;
                     elseif newPos < inFrontPos - 2 *followDistance
                         %TODO Add closing the gap to follow distance
                         error = newPos - (inFrontPos - followDistance);
