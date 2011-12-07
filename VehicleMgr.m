@@ -11,6 +11,7 @@ classdef VehicleMgr <handle
                                         % column 2 is the lane that vehicle is in
                                         % column 3 is the distance from the beginning of
                                         % the highway of that vehicle.
+                                        % column 4 is the id of the vehicle
                                         % There may be zeros within the array
         exitedVehicles = Vehicle.empty; % Those vehicles that have left the highway.
     end
@@ -21,7 +22,7 @@ classdef VehicleMgr <handle
         function obj = VehicleMgr(lanesIn)
             obj.lanes = lanesIn;
             obj.travelLanes = lanesIn - 2;      % Assume caravan lanes exist
-            obj.highway = zeros(0, 3);
+            obj.highway = zeros(0, 4);
         end
         
         % Function to add vehicles
@@ -93,12 +94,13 @@ classdef VehicleMgr <handle
         function obj = BuildHighway(obj)
             % Get a new highway that is more than we will need.  This will
             % allow us to add without incurring overhead of adding
-            obj.highway = zeros(length(obj.currentVehicles), 3);
+            obj.highway = zeros(length(obj.currentVehicles), 4);
             % Now re-build the highway.  It consists of the index, location
             % and lane for every vehicle
             for v = 1:length(obj.currentVehicles)
-                assert(obj.currentVehicles(v).lane > 0);
-                obj.highway(v, 1:3) = [v, obj.currentVehicles(v).lane, obj.currentVehicles(v).posY];
+                assert(obj.currentVehicles(v).lane > 0, 'lane = %d\n', obj.currentVehicles(v).lane);
+                obj.highway(v, 1:4) = [v, obj.currentVehicles(v).lane, obj.currentVehicles(v).posY, ...
+                                       obj.currentVehicles(v).id];
             end
             
             % Now sort the rows by position
@@ -143,12 +145,17 @@ classdef VehicleMgr <handle
                 vm.highway(i - 1, 1) = vm.highway(i, 1);
                 vm.highway(i - 1, 2) = vm.highway(i, 2);
                 vm.highway(i - 1, 3) = vm.highway(i, 3);
+                vm.highway(i - 1, 4) = vm.highway(i, 4);
                 i = i + 1;
             end
             if (i > size(vm.highway, 1))
-                vm.highway(i - 1, 1:3) = [vehicleToMove, vm.currentVehicles(vehicleToMove).lane, vm.currentVehicles(vehicleToMove).posY];
+                vm.highway(i - 1, 1:4) = [vehicleToMove, vm.currentVehicles(vehicleToMove).lane, ...
+                                          vm.currentVehicles(vehicleToMove).posY,...
+                                          vm.currentVehicles(vehicleToMove).id];
             else
-                vm.highway(i, 1:3) = [vehicleToMove, vm.currentVehicles(vehicleToMove).lane, vm.currentVehicles(vehicleToMove).posY];
+                vm.highway(i, 1:4) = [vehicleToMove, vm.currentVehicles(vehicleToMove).lane, ...
+                                      vm.currentVehicles(vehicleToMove).posY,...
+                                      vm.currentVehicles(vehicleToMove).id];
             end
         end
         
