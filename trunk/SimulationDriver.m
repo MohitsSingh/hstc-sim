@@ -65,7 +65,7 @@ while ~startSimulation
         case 2
             Kpp2_Generate;
             SimulationSetup.SlowLoop    = 1;
-            SimulationSetup.SimTimeStep = 0.1;
+            SimulationSetup.SimTimeStep = 1;
             startSimulation             = true;
             SimulationSetup.focusId     = 1;
         case 3
