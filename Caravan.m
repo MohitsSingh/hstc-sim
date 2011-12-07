@@ -93,8 +93,8 @@ classdef Caravan < hgsetget % subclass hgsetget
                 % send a message to all cars behind insertion point to
                 % slow down 2 mph.   All cars in front of point  to speed up 2mph
                 for i = 1 : extractLocation
-                    obj.allVehicles(i).targetVelocity   = obj.allVehicles(i).targetVelocity + 2.0;
-                    obj.allVehicles(i).targetRate       = 0.2;
+%                     obj.allVehicles(i).targetVelocity   = obj.allVehicles(i).targetVelocity + 2.0;
+%                     obj.allVehicles(i).targetRate       = 0.2;
                 end
             end
         end

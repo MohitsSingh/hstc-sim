@@ -335,7 +335,7 @@ classdef CaravanController  <handle
                         obj.removingCars(i).state = obj.extWaitForCarinPosition;
                         obj.removingCars(i).vehicle.moveToMergeLane = true;
                         %tell the lead cars to go back to normal speed
-                        obj.removingCars(i).caravan.ResumeSpeed();
+%                         obj.removingCars(i).caravan.ResumeSpeed();
                     end
                     
                 elseif obj.removingCars(i).state == obj.extWaitForCarinPosition
