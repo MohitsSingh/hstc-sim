@@ -53,7 +53,7 @@ StatisticsSetup.DisplayKpp2                  = false;
 StatisticsSetup.DisplayKpp5                  = false;
 SimParams.genTraffic                    = false;
 SimParams.numLanes                      = 5;
-SimParams.trafficRate                   = 100;
+SimParams.trafficRate                   = 5;
 
 
 while ~startSimulation
@@ -106,7 +106,12 @@ while ~startSimulation
                 'Traffic Arrival Rate (vehicles/hr/lane):' ...
                 'Simulation Run Length (s):' ...
                 'Simulation Time Step (s):'};
-            answer = inputdlg(prompt, 'Edit Simulation Parameters');
+            defaultanswer={num2str(SimParams.numLanes),...
+                num2str(SimParams.trafficRate),...
+                num2str(SimulationSetup.SimulationRunLength),...
+                num2str(SimulationSetup.SimTimeStep)};
+            answer = inputdlg(prompt, 'Edit Simulation Parameters',1,...
+                defaultanswer);
             SimParams.numLanes = str2num(answer{1});
             SimParams.trafficRate = str2num(answer{2});
             SimulationSetup.SimulationRunLength = str2num(answer{3});
@@ -128,7 +133,7 @@ close all;
 if SimParams.genTraffic
     tg = TrafficGen;
     tg = InitTraffic (tg, SimParams.numLanes, SimParams.trafficRate, ...
-        100, SimulationSetup.SimTimeStep, true);
+        SimulationSetup.SimulationRunLength, SimulationSetup.SimTimeStep, true);
 end
 
 simulationOver = false;
