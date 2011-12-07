@@ -375,11 +375,21 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % TODO incorporate acceleration
             % TODO incorporate velocity
             % TODO calculate work
-            powerOfDrag = forceOfDrag * (obj.velocity * 0.44704);
+            powerOfDrag = forceOfDrag * (obj.velocity * 0.44704) % watts
             
             %convert to horsepower, and figure out weight of gas consumed
             % 1 hp = 746 W = 746 (kg·m/s2)·(m/s)
-            powerOfDragHP = powerOfDrag / 746;
+%             powerOfDragHP = powerOfDrag / 746; % hp
+            
+            %http://ecomodder.com/wiki/index.php/Simulation_and_calculations
+            % Fuel energy density (Wh/US gal.): 33557 
+            % Engine efficiency: .22 
+            % Drivetrain efficiency: .95 
+            mpgRequired = obj.velocity * 33557 * .22 * .95 / powerOfDrag;
+            
+            
+            obj.fuelEconomy = mpgRequired;
+            
             
             %convert the weight to gallons
             %divide gallons into miles travelled for mpg
@@ -391,12 +401,14 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % specific fuel consumption of 0.310 lb/hp?h but operate at 
             % an average of about 0.450 lb/hp?h. 
             
+            
+            
             % powerOfDragHP * 0.45   == lb/h
             % "" / 6.073 = g/h
             % 1 / "" = h/g
             % velocity * "" = m/g
             
-            mpgLossDueToDrag = obj.velocity / (powerOfDragHP * 0.45 / 6.073);
+%             mpgLossDueToDrag = obj.velocity / (powerOfDragHP * 0.45 / 6.073);
             
             % http://wiki.answers.com/Q/How_much_does_a_gallon_of_gasoline_weigh
             % 6.073 pounds per US Gallon. 
@@ -407,7 +419,6 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % feet. This is the most common definition of a gallon 
             % in the United States. 
             % TODO calculate fuel economy based on work
-            obj.fuelEconomy = obj.baseFuelEconomy;
         end
         
     end
