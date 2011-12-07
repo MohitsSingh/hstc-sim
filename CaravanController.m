@@ -193,7 +193,7 @@ classdef CaravanController  <handle
         end
         
         function acceleration = CalculateAccelerationFromIntersectionPoint(obj,c,v,t)
-            cv = c.allVehicles(c.insertLocation+1);
+            cv = c.allVehicles(c.gapLocation+1);
             intCaravanPosition = cv.posY + cv.velocity * t;
             acceleration = 2*(intCaravanPosition - v.posY - v.velocity*t) / t^2;
         end
