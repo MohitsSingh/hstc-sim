@@ -391,6 +391,13 @@ classdef Vehicle < hgsetget % subclass hgsetget
             % specific fuel consumption of 0.310 lb/hp?h but operate at 
             % an average of about 0.450 lb/hp?h. 
             
+            % powerOfDragHP * 0.45   == lb/h
+            % "" / 6.073 = g/h
+            % 1 / "" = h/g
+            % velocity * "" = m/g
+            
+            mpgLossDueToDrag = obj.velocity / (powerOfDragHP * 0.45 / 6.073);
+            
             % http://wiki.answers.com/Q/How_much_does_a_gallon_of_gasoline_weigh
             % 6.073 pounds per US Gallon. 
 
