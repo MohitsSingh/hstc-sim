@@ -176,7 +176,7 @@ classdef Vehicle < hgsetget % subclass hgsetget
                     %of it, we need to follow a little further behind
                     if obj.gapMode == true
 %                         followDistance = 27/5280.0; %TODO
-                        followDistance = obj.minCaravanDistance;
+                        followDistance = obj.minCaravanDistance + obj.length;
                     else
                         followDistance = obj.minCaravanDistance;
                     end
