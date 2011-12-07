@@ -11,7 +11,7 @@ timeStep = 1/(60/deltaT)/60;    % in units of an hour.
 useCaravan = true;
 fillHours = 1;
 trackId = -999;
-numberTests = 3;
+numberTests = 5;
 
 tg = TrafficGen;
 tg = InitTraffic (tg, lanes, arrivalRate, 100, timeStep, useCaravan);
@@ -47,7 +47,7 @@ end
 toc
 fprintf(1, 'Highway filled\n');
 
-numTestsRun = 5;
+numTestsRun = 0;
 
 
 caravanMPG = zeros(1, numberTests);
@@ -168,10 +168,6 @@ while (numTestsRun < numberTests)
     fprintf(1, 'Total number of vehicles: %d\n', length(vm.currentVehicles) + length(vm.exitedVehicles));
     fprintf(1, 'Caravan vehicles: %d\n', caravanCount(numTestsRun));
     
-%     caravanMpg = mean(nonzeros(([vm.currentVehicles.caravanNumber] > 0) .* [vm.currentVehicles.fuelEconomy]))
-%     nonCaravanMpg = mean(nonzeros(([vm.currentVehicles.caravanNumber] <= 0) .* [vm.currentVehicles.fuelEconomy]))
-%     avgMpg = mean([vm.currentVehicles.fuelEconomy])
-
     fprintf(1, 'Tracked vehicle went %f\n', trackedDistance(numTestsRun));
     fprintf(1, 'Tracked vehicle travel time (hours) %f\n', trackedTime(numTestsRun)/60/60);
     fprintf(1, 'Tracked vehicle MPH: %f\n', trackedDistance(numTestsRun)/(trackedTime(numTestsRun)/60/60));
