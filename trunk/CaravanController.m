@@ -312,8 +312,10 @@ classdef CaravanController  <handle
                         obj.assignedCars(i).vehicle.joiningCaravan = false;
                         
                         %todo update caravan veihcile array
+                        obj.assignedCars(i).state = 0;
                         %       remove assigned vehicle list item
                     end
+                    
                 end
 % removalIdx = find([obj.assignedCars.vehicle.id] == obj.removingCars(i).vehicle.id);
 %                        obj.assignedCars = [obj.assignedCars(1:removalIdx-1) obj.assignedCars(removalIdx + 1: length(obj.assignedCars))];                
