@@ -9,8 +9,6 @@
 %
 % Ver   Date        Author      Description  
 
-munlock VehicleMgr
-munlock CaravanController
 % Initialization
 close all   %close all previously opended figures
 clc
@@ -21,7 +19,7 @@ global CaravanControllerSetup
 global SimulationSetup
 global guiHandle
 
-cc = CaravanController.getInstance;
+cc = CaravanController.getInstance();
 vm = VehicleMgr.getInstance(5);
 
 % Initialize variables
@@ -29,8 +27,6 @@ turnNumber = 1;
 selection = 0;
 simulationOver = false;
 startSimulation = false;
-
-tinc    = 2; %seconds
 
 %load default simulation setups
 CaravanControllerSetup.VehicleSpacing       = 3;
@@ -41,10 +37,13 @@ CaravanControllerSetup.MaxCaravanDistance   = 100;
 
 SimulationSetup.TrafficDensityModel     = 'normal';
 SimulationSetup.SimulationRunLength     = 180;
-SimulationSetup.SimulationRunUnits      = 'Seconds';
+SimulationSetup.SimulationRunUnits      = 'forever';
+SimulationSetup.SimTimeStep             = 2;
+SimulationSetup.SlowLoop                = 0;
 SimulationSetup.focusId                 = 0;
 SimulationSetup.Pause                   = false;
 SimulationSetup.End                     = false;
+
 
 while ~startSimulation
     selection = menu('Main Menu',...
@@ -60,27 +59,30 @@ while ~startSimulation
     switch selection
         case 1
             Kpp1_Generate;
-            startSimulation = true;
-            SimulationSetup.focusId = 1;
+            SimulationSetup.SlowLoop    = 0;
+            startSimulation             = true;
+            SimulationSetup.focusId     = 1;
         case 2
             Kpp2_Generate;
-            startSimulation = true;
-            SimulationSetup.focusId = 1;
+            SimulationSetup.SlowLoop    = 1;
+            SimulationSetup.SimTimeStep = 0.1;
+            startSimulation             = true;
+            SimulationSetup.focusId     = 1;
         case 3
             Kpp3_Generate;
-            startSimulation = true;
+            startSimulation             = true;
         case 4
 %             Kpp4_Generate;
             KPP4(1);
-            startSimulation = true;
+            startSimulation             = true;
         case 5
             Kpp5_Generate;
-            startSimulation = true;
-            SimulationSetup.focusId = 4;
+            startSimulation             = true;
+            SimulationSetup.focusId     = 4;
         case 6
-            startSimulation = true;
+            startSimulation             = true;
         case 7  
-            startSimulation = true;
+            startSimulation             = true;
         case 8
             EditSimulationParameters;
         case 9
@@ -101,8 +103,9 @@ simulationOver = false;
 % exit the game
 
 %capture start time
-startTime = clock;  
-t = 0;
+startTime   = clock;  
+t           = 0;
+tinc        = SimulationSetup.SimTimeStep; %seconds
 
 guiHandle = GUI;
 setappdata(guiHandle,'vm',vm);
@@ -130,6 +133,15 @@ while ~simulationOver
     vm.TimeStep(tinc);
     cc.Update();
     
+    if sum([vm.currentVehicles.gapMode]) > 0
+        tinc=2;
+%         SimulationSetup.SlowLoop = 1;
+    end
+% %     fprintf('%d, ',sum([vm.currentVehicles.gapMode]) );
+% %     for i= 1:10
+% %         fprintf('%f, ', vm.currentVehicles(i).posY);
+% %     end
+% %     fprintf('\n');
     %check for exit conditions
     if strcmp(SimulationSetup.SimulationRunUnits, 'Seconds')
         if etime(clock, startTime) > SimulationSetup.SimulationRunLength
@@ -145,7 +157,9 @@ while ~simulationOver
     GUI('updateGUI');
     
     elapsedTime=toc;
-%     pause(tinc-elapsedTime);
+    if SimulationSetup.SlowLoop
+        pause(tinc-elapsedTime);
+    end
     
 end
 

@@ -271,7 +271,7 @@ classdef CaravanController  <handle
                     if timeToMeetingInHours < 5 / 3600 %5seconds
                         % adjust target car speed 
                         intPoint = obj.assignedCars(i).caravan.GetInsertionPoint()...
-                                + obj.assignedCars(i).caravan.velocity * 2/3600;
+                                + obj.assignedCars(i).caravan.velocity * SimulationSetup.SimTimeStep /3600;
                         [inGap, offset, gapCenter] = obj.IsCarInGap(i);
                         assert(offset > -100 /5280);  %behind by 100 feet
                         if  inGap
@@ -280,7 +280,7 @@ classdef CaravanController  <handle
                             %todo..this should acutally control
                             %acceleration
                             obj.assignedCars(i).vehicle.targetVelocity =  ...
-                                (intPoint - obj.assignedCars(i).vehicle.posY) / (2 / 3600);
+                                (intPoint - obj.assignedCars(i).vehicle.posY) / (SimulationSetup.SimTimeStep / 3600);
                             obj.assignedCars(i).vehicle.velocity =  ...
                                 obj.assignedCars(i).vehicle.targetVelocity;
                         end
@@ -291,6 +291,11 @@ classdef CaravanController  <handle
                     obj.assignedCars(i).vehicle.velocity = obj.assignedCars(i).caravan.velocity;
                     obj.assignedCars(i).vehicle.targetVelocity = obj.assignedCars(i).vehicle.velocity;
                     obj.assignedCars(i).vehicle.moveToCaravanLane = true;
+                    obj.assignedCars(i).vehicle.caravanSpeed = obj.assignedCars(i).caravan.velocity;
+                    obj.assignedCars(i).vehicle.caravanPosition = ...
+                        obj.assignedCars(i).caravan.GetInsertionPoint() + ...
+                        + obj.assignedCars(i).caravan.velocity * SimulationSetup.SimTimeStep /3600+...
+                        obj.assignedCars(i).vehicle.length / 2.0;
                     obj.assignedCars(i).state = obj.restoreCaravan;
                     
                 elseif obj.assignedCars(i).state == obj.restoreCaravan
