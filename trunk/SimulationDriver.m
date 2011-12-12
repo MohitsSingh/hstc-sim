@@ -92,14 +92,16 @@ while ~startSimulation
             startSimulation             = true;
             SimulationSetup.focusId     = 4;
             SimulationSetup.ShowGUI     = true;
-            vm = VehicleMgr.getInstance(SimParams.numLanes);
         case 5
             startSimulation             = true;
             SimParams.genTraffic = true;
+            SimulationSetup.SimulationRunUnits      = 'Seconds';
         case 6
             startSimulation             = true;
             SimulationSetup.ShowGUI     = false;
             SimParams.genTraffic = true;
+            SimulationSetup.SlowLoop    = 1;
+            SimulationSetup.SimulationRunUnits      = 'Seconds';
         case 7  
 %             EditSimulationParameters;
             prompt= {'Number of lanes:' ...
@@ -236,6 +238,17 @@ while ~simulationOver
     end
     
 end
+
+vehicles = vm.currentVehicles;
+
+numInCaravan = sum([vehicles.caravanNumber] > 0)
+numNotInCaravan = sum([vehicles.caravanNumber] <= 0)
+caravanAvgMpg = mean(nonzeros(([vehicles.caravanNumber] > 0) .* [vehicles.avgMPG]))
+nonCaravanAvgMPG = mean(nonzeros(([vehicles.caravanNumber] <= 0) .* [vehicles.avgMPG]))
+% caravanDist = sum(nonzeros(([vehicles.caravanNumber] > 0) .* [vehicles.distanceTraveled]))
+% nonCaravanDist = sum(nonzeros(([vehicles.caravanNumber] <= 0) .* [vehicles.distanceTraveled]))
+% caravanTime = sum(nonzeros(([vehicles.caravanNumber] > 0) .* [vehicles.driveTime]))
+% caravanTime = sum(nonzeros(([vehicles.caravanNumber] <= 0) .* [vehicles.driveTime]))
 
 disp('End of simulation');
     
